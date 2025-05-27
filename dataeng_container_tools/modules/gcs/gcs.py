@@ -154,15 +154,14 @@ class GCSFileIO(BaseModule):
     @overload
     def download(
         self,
-        *,
         gcs_uris: Mapping[str, str | Path],
     ) -> None: ...
 
     @overload
     def download(
         self,
-        *,
         gcs_uris: str | list[str],
+        *,
         dtype: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> dict[
@@ -172,7 +171,6 @@ class GCSFileIO(BaseModule):
 
     def download(
         self,
-        *,
         gcs_uris: str | list[str] | Mapping[str, str | Path],
         **kwargs: Any,  # Use ParamSpec in future
     ) -> ...:
@@ -312,7 +310,6 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        *,
         gcs_uris: Mapping[str, str | Path],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
@@ -321,7 +318,6 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        *,
         gcs_uris: Mapping[str, object],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
@@ -329,7 +325,6 @@ class GCSFileIO(BaseModule):
 
     def upload(
         self,
-        *,
         gcs_uris: Mapping[str, str | Path] | Mapping[str, object],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future

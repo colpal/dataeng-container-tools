@@ -36,7 +36,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["dataeng_container_tools"]
-py-modules = ["dataEng_container_tools"]
 
 [tool.setuptools_scm]
 

@@ -10,12 +10,12 @@ from .cla import (
     CustomCommandLineArgument,
 )
 from .log_utils import configure_logger
-from .modules import DB, GCSFileIO
+from .modules import DS, GCSFileIO
 from .safe_textio import SafeTextIO, setup_default_stdio
 from .secrets_manager import SecretLocations, SecretManager
 
 __all__ = [
-    "DB",
+    "DS",
     "CommandLineArgumentType",
     "CommandLineArguments",
     "CustomCommandLineArgument",

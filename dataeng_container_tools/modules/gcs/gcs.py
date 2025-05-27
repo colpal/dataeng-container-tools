@@ -310,7 +310,7 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        gcs_uris: Mapping[str, str | Path],
+        gcs_uris: Mapping[str | Path, str],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
@@ -318,14 +318,14 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        gcs_uris: Mapping[str, object],
+        gcs_uris: Mapping[object, str],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
 
     def upload(
         self,
-        gcs_uris: Mapping[str, str | Path] | Mapping[str, object],
+        gcs_uris: Mapping[str | Path, str] | Mapping[object, str],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future
     ) -> None:
@@ -333,7 +333,7 @@ class GCSFileIO(BaseModule):
 
         This method serves as a dispatcher for uploading either files from the
         local filesystem or Python objects directly to GCS. You must provide
-        either a Mapping of GCS URIs to files or a Mapping of GCS URIs to objects.
+        either a Mapping of local file paths to GCS URIs or a Mapping of Python objects to GCS URIs.
 
         The number of `gcs_uris` must match the number of files or objects.
 
@@ -346,9 +346,9 @@ class GCSFileIO(BaseModule):
         appropriate serialization methods (e.g., `to_parquet` for Pandas DataFrames).
 
         Args:
-            gcs_uris (Mapping[str, str | Path] | Mapping[str, object]):
-                Mapping of GCS URIs to local file paths (str or Path) to upload from the local filesystem,
-                or Mapping of GCS URIs to Python objects to upload. Supported object types depend on the
+            gcs_uris (Mapping[str | Path, str] | Mapping[object, str]):
+                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem,
+                or Mapping of Python objects to GCS URIs to upload. Supported object types depend on the
                 file extension of the `gcs_uri` (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json).
             metadata (dict | None): Optional dictionary of metadata to associate with the uploaded GCS object(s).
             **kwargs (Any): Additional keyword arguments passed to the underlying upload or serialization functions
@@ -358,18 +358,18 @@ class GCSFileIO(BaseModule):
             TypeError: If `gcs_uris` is not a Mapping.
             ValueError: If uploading an object and no compatible file extension is found in the `gcs_uri`.
         """
-        if isinstance(gcs_uris, Mapping) and all(isinstance(v, (str, Path)) for v in gcs_uris.values()):
-            self.upload_file(gcs_uris=cast("Mapping[str, str | Path]", gcs_uris), metadata=metadata, **kwargs)
+        if isinstance(gcs_uris, Mapping) and all(isinstance(k, (str, Path)) for k in gcs_uris):
+            self.upload_file(gcs_uris=cast("Mapping[str | Path, str]", gcs_uris), metadata=metadata, **kwargs)
         elif isinstance(gcs_uris, Mapping):
             # str counts as objects, however JSON can also be str so cannot do explicit checks for upload_object
-            self.upload_object(gcs_uris=gcs_uris, metadata=metadata, **kwargs)
+            self.upload_object(gcs_uris=cast("Mapping[object, str]", gcs_uris), metadata=metadata, **kwargs)
         else:
             msg = "gcs_uris must be a Mapping"
             raise TypeError(msg)
 
     def upload_file(
         self,
-        gcs_uris: Mapping[str, str | Path],
+        gcs_uris: Mapping[str | Path, str],
         metadata: dict | None = None,
     ) -> None:
         """Uploads local file(s) to GCS.
@@ -379,8 +379,8 @@ class GCSFileIO(BaseModule):
         automatically included.
 
         Args:
-            gcs_uris (Mapping[str, str | Path]):
-                Mapping of GCS URIs to local file paths (str or Path) to upload from the local filesystem.
+            gcs_uris (Mapping[str | Path, str]):
+                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem.
             metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
         """
         metadata = metadata or {}
@@ -391,7 +391,7 @@ class GCSFileIO(BaseModule):
             if var in os.environ:
                 metadata.setdefault(var, os.environ[var])
 
-        for gcs_uri, file in gcs_uris.items():
+        for file, gcs_uri in gcs_uris.items():
             bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
@@ -400,7 +400,7 @@ class GCSFileIO(BaseModule):
 
     def upload_object(
         self,
-        gcs_uris: Mapping[str, object],
+        gcs_uris: Mapping[object, str],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None:
@@ -413,8 +413,8 @@ class GCSFileIO(BaseModule):
         automatically included.
 
         Args:
-            gcs_uris (Mapping[str, object]):
-                Mapping of GCS URIs to Python objects to upload. Supported types include
+            gcs_uris (Mapping[object, str]):
+                Mapping of Python objects to GCS URIs to upload. Supported types include
                 `pd.DataFrame` (for .parquet, .csv, .xlsx) and `str` (for .json).
             metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
             **kwargs (Any): Additional keyword arguments passed to the serialization
@@ -434,7 +434,7 @@ class GCSFileIO(BaseModule):
             if var in os.environ:
                 metadata.setdefault(var, os.environ[var])
 
-        for gcs_uri, object_to_upload in gcs_uris.items():
+        for object_to_upload, gcs_uri in gcs_uris.items():
             bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)

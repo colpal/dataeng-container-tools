@@ -55,7 +55,7 @@ Here is what these operations might look like:
     df['new_column'] = df['existing_column'] * 2
 
     # Upload the modified DataFrame back to GCS
-    gcs.upload("gs://my-bucket/path/to/processed_data.csv", objects_to_upload=df)
+    gcs.upload({df: "gs://my-bucket/path/to/processed_data.csv"})
 
 With file operations instead of object operations it looks like:
 
@@ -100,11 +100,10 @@ The GCS module supports various file formats including ``parquet``, ``csv``, ``x
     result_df = pd.concat([parquet_df, csv_df])
 
     # Upload in different formats
-    gcs.upload("gs://my-bucket/output.parquet", object_to_upload=result_df)
+    gcs.upload({result_df: "gs://my-bucket/output.parquet"})
 
     gcs.upload(
-        gcs_uris="gs://my-bucket/output.csv",
-        objects_to_upload=result_df,
+        gcs_uris={result_df: "gs://my-bucket/output.csv"},
         header=True,
         index=False,
     )
@@ -142,7 +141,7 @@ All operations support either a single GCS URI or a list. By inputting a list it
 
     # Upload the processed files
     gcs.upload(
-        gcs_uris=dict(zip(upload_files, processed_files)),
+        gcs_uris=dict(zip(processed_files, upload_files)),
         headers=0,
     )
 
@@ -261,4 +260,4 @@ However, these emulators are a bit outdated and do not support globs at the time
     gcs.download({"/emulated-gcs-bucket/file.csv": "./file.csv"})
 
     # Upload a local file
-    gcs.upload({"/emulated-gcs-bucket/file.csv", files="./file.csv"})
+    gcs.upload({"./file.csv": "/emulated-gcs-bucket/file.csv"})

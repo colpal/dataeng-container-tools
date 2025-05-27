@@ -1,7 +1,7 @@
 """Handles all modules which stem from the BaseModule class."""
 
 from .base_module import BaseModule, BaseModuleUtilities
-from .db import DB
-from .gcs import GCS, GCSFileIO
+from .ds import DS
+from .gcs import GCSFileIO
 
-__all__ = ["DB", "GCS", "BaseModule", "BaseModuleUtilities", "GCSFileIO"]
+__all__ = ["DS", "BaseModule", "BaseModuleUtilities", "GCSFileIO"]

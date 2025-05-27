@@ -5,11 +5,13 @@ Supports multithreading/multiproccessing.
 Functions:
     log_memory_usage: Log the current memory usage of the process.
 """
+from __future__ import annotations
 
 import json
 import logging
 import os
 import sys
+from typing import Literal
 
 import psutil
 from psutil._common import bytes2human
@@ -62,7 +64,10 @@ def log_memory_usage(pid: int = os.getpid()) -> None:
         root_logger.exception("Failed to track memory")
 
 
-def configure_logger(logger_name: str, id_type: str = "none") -> logging.Logger:
+def configure_logger(
+    logger_name: str,
+    id_type: Literal["process", "thread", "none"] = "none",
+) -> logging.Logger:
     """Generate a logger with specifications."""
     logger = logging.getLogger(logger_name)
 

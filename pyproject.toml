@@ -7,12 +7,12 @@ maintainers = [
     { name = "CP DE Team", email = "git_data_science_engineering@colpal.com" },
 ]
 dependencies = [
-    "pandas",
-    "google-cloud-storage",
-    "google-cloud-datastore",
-    "openpyxl",
-    "pyarrow",
-    "psutil",
+    "psutil>=7.0.0",
+    "openpyxl>=3.1.5",
+    "pyarrow>=20.0.0",
+    "pandas>=2.2.3",
+    "google-cloud-storage>=3.1.0",
+    "google-cloud-datastore>=2.21.0",
 ]
 requires-python = ">=3.9"
 license = { text = "MIT License" }
@@ -36,7 +36,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["dataeng_container_tools"]
-py-modules = ["dataEng_container_tools"]
 
 [tool.setuptools_scm]
 

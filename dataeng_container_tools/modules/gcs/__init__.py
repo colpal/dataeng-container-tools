@@ -1,4 +1,4 @@
 """GCS Module."""
-from .gcs import GCS, GCSFileIO
+from .gcs import GCSFileIO
 
-__all__ = ["GCS", "GCSFileIO"]
+__all__ = ["GCSFileIO"]

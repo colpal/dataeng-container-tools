@@ -1,4 +1,4 @@
 """Database module for Datastore operations."""
-from .db import DB
+from .ds import DS
 
-__all__ = ["DB"]
+__all__ = ["DS"]

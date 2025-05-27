@@ -44,7 +44,7 @@ class ModuleRegistryMeta(type):
         super().__init__(name, bases, namespace)
         # Only register subclasses
         if name != "BaseModule" and hasattr(cls, "MODULE_NAME") and hasattr(cls, "DEFAULT_SECRET_PATHS"):
-            SecretManager.register_module(cls)
+            SecretLocations.register_module(cls)
             logger.debug("Auto-registered module %s with SecretManager", getattr(cls, "MODULE_NAME", "Unknown"))
 
 

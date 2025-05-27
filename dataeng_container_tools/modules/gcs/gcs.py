@@ -18,33 +18,71 @@ from __future__ import annotations
 import io
 import json
 import os
-import pickle
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, cast
-
-import pandas as pd
-from google.cloud import storage
+from typing import TYPE_CHECKING, Any, ClassVar, Final, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    import pandas as pd
+    from google.cloud import storage
     from google.cloud.storage.blob import Blob
 
 
-class GCSFileIO(BaseModule):
-    """Uploads and downloads files to/from GCS.
+class GCSUriUtils:
+    """Utility class for handling GCS URIs.
 
-    This uploads and downloads files to/from GCS. It will handle
-    much of the backend boilerplate code involved with downloading,
-    to object of file and uploading from object or file.
-    Includes helper functions for using GCS.
+    Provides static methods to resolve and parse GCS URIs.
+    """
+
+    PREFIX: Final = "gs://"
+
+    @staticmethod
+    def resolve_uri(gcs_uri: str) -> str:
+        """Resolves a GCS URI to its absolute path.
+
+        Removes the "gs://" prefix, resolves the path, and re-adds the prefix.
+
+        Args:
+            gcs_uri (str): The GCS URI string to resolve.
+
+        Returns:
+            str: The resolved GCS URI string.
+        """
+        gcs_uri = gcs_uri.removeprefix(GCSUriUtils.PREFIX)
+        return GCSUriUtils.PREFIX + Path(gcs_uri.lstrip(GCSUriUtils.PREFIX)).resolve().as_posix()
+
+    @staticmethod
+    def get_components(gcs_uri: str) -> tuple[str, str]:
+        """Extracts the bucket name and file path from a GCS URI.
+
+        Args:
+            gcs_uri (str): The GCS URI string.
+
+        Returns:
+            tuple[str, str]: A tuple containing the bucket name and the file path.
+        """
+        gcs_uri = gcs_uri.removeprefix("gs://")
+        bucket = gcs_uri[: gcs_uri.find("/")]
+        file_path = gcs_uri[gcs_uri.find("/") + 1 :]
+        return bucket, file_path
+
+
+class GCSFileIO(BaseModule):
+    """Uploads and downloads files to/from Google Cloud Storage (GCS).
+
+    This class handles the boilerplate code for interacting with GCS,
+    allowing for downloading files to objects or local files, and uploading
+    objects or local files to GCS. It also includes helper functions for
+    common GCS operations.
 
     Attributes:
-        gcs_client: The GCS Client
-            associated with the the GCS upload or download location.
-        local: A boolean flag indicating whether or not the library
-            is running in local only mode and should not attempt to
-            contact GCP. If True, will look for the files locally.
+        client (storage.Client): The Google Cloud Storage client instance.
+        local (bool): A boolean indicating if the module is in local-only mode.
+               If True, no actual GCS operations are performed.
     """
 
     MODULE_NAME: ClassVar[str] = "GCS"
@@ -60,16 +98,22 @@ class GCSFileIO(BaseModule):
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
     ) -> None:
-        """Initializes gcs_file_io with desired configuration.
+        """Initializes GCSFileIO with desired configuration.
 
         Args:
-            gcs_secret_location (str | Path | None): The location of the secret file needed for GCS.
-            local (bool): If True, no contact will be made with GCS.
+            gcs_secret_location (str | Path | None): Path to the GCS service account JSON key file.
+            local (bool): If True, operates in local mode without GCS interaction. Should be used
+                with a GCS local emulator.
             use_cla_fallback (bool): If True, attempts to use command-line arguments
-                as a fallback source for secrets when the primary source fails.
-            use_file_fallback (bool): If True, attempts to use the default secret file
-                as a fallback source when both primary and command-line sources fail.
+                as a fallback for secret location if `gcs_secret_location` is not found.
+            use_file_fallback (bool): If True, attempts to use the default secret file path
+                as a fallback if other sources fail.
+
+        Raises:
+            FileNotFoundError: If GCS credentials are not found and not in local mode.
         """
+        from google.cloud import storage
+
         self.local = local
 
         if not self.local:
@@ -85,496 +129,345 @@ class GCSFileIO(BaseModule):
 
             self.client: storage.Client = storage.Client.from_service_account_info(gcs_sa)
         else:
-            self.client: storage.Client = storage.Client()  # For typing, unused
+            from google.auth.credentials import AnonymousCredentials
 
-    @staticmethod
-    def __get_parts(gcs_uri: str) -> tuple[str, str]:
-        gcs_uri = gcs_uri.removeprefix("gs://")
-        bucket = gcs_uri[: gcs_uri.find("/")]
-        file_path = gcs_uri[gcs_uri.find("/") + 1 :]
-        return bucket, file_path
+            self.client: storage.Client = storage.Client(credentials=AnonymousCredentials())
 
-    def __wildcard_download(
-        self,
-        gcs_uri: str,
-        default_file_type: str | None,
-        dtype: dict | None,
-        pandas_kwargs: dict,
-    ) -> dict[str, Any]:
-        return_dict: dict[str, Any] = {}
-        bucket_name, file_path = self.__get_parts(gcs_uri)
+    def uri_to_blobs(self, gcs_uri: str) -> Iterator[Blob]:
+        """Converts a GCS URI to an iterator of Blob objects.
+
+        Supports glob patterns in the GCS URI for matching multiple files.
+        See `https://cloud.google.com/storage/docs/json_api/v1/objects/list#list-objects-and-prefixes-using-glob`
+        for more information on glob matching.
+
+        Args:
+            gcs_uri (str): The GCS URI, which can include glob patterns.
+
+        Returns:
+            Iterator[Blob]: An iterator yielding `google.cloud.storage.blob.Blob` objects
+            matching the URI.
+        """
+        bucket_name, file_path = GCSUriUtils.get_components(gcs_uri)
         bucket = self.client.bucket(bucket_name)
-        prefix = file_path.strip("*")
-        blobs: list[Blob] = list(bucket.list_blobs(prefix=prefix))
-        for blob in blobs:
-            name = cast("str", blob.name)
-            return_dict[name] = self.download_file_to_object(
-                name,
-                default_file_type=default_file_type,
-                dtype=dtype,
-                pandas_kwargs=pandas_kwargs,
-            )
-        return return_dict
+        return bucket.list_blobs(match_glob=file_path)
 
-    def download_file_to_object(
+    @overload
+    def download(
         self,
-        gcs_uri: str | Path,
-        default_file_type: str | None = None,
-        dtype: dict | None = None,
-        delimiter: str | None = None,
-        header: int | list[int] | None = 0,
-        pandas_kwargs: dict | None = None,
-        encoding: str = "utf-8",
-    ) -> dict | pd.DataFrame | io.BytesIO | io.TextIOWrapper:
-        """Downloads a file from GCS to an object in memory.
+        gcs_uris: Mapping[str, str | Path],
+    ) -> None: ...
 
-        https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html
-        https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
-
-        Args:
-            gcs_uri: Required. The uri of the object in GCS to download. If local is
-                True, it is the path to a local file that will be read into an object.
-            default_file_type: Optional. Defaults to None. If the uri the object does not have a
-                file type ending, it will be assumed to be this type.
-            dtype: Optional. Defaults to None. A dictionary of (column: type) pairs.
-            delimiter: Optional. Defaults to None. delimiter of the file.
-            header: Optional. Default to 0. If set to None it will not read first row as header.
-                For xls and csv files, if set to 0 or any int or List[int] it will read those
-                rows to build header/columns.
-            pandas_kwargs: Optional. Defaults to None. Additional keyword arguments to pass to pandas.
-            encoding: Optional. Defaults to utf-8. encoding of the file.
-
-        Returns:
-            A dataframe if the object format can be inferred, otherwise a file-like object.
-        """
-        pandas_kwargs = pandas_kwargs or {}
-
-        # Get the file object
-        if self.local or isinstance(gcs_uri, Path):
-            file_path = str(gcs_uri)
-            file_obj = io.BytesIO(Path(gcs_uri).read_bytes())
-        elif "*" in gcs_uri and not self.local:  # Handle wildcard downloads
-            return self.__wildcard_download(gcs_uri, default_file_type, dtype, pandas_kwargs)
-        else:
-            bucket_name, file_path = self.__get_parts(gcs_uri)
-            bucket = self.client.bucket(bucket_name)
-            binary_object = bucket.blob(file_path).download_as_string()
-            file_obj = io.BytesIO(binary_object)
-
-        # Determine file type and read accordingly
-        file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_path.endswith(ext)), None)
-
-        # Use default_file_type if no extension found
-        if file_extension is None and default_file_type:
-            file_extension = default_file_type
-
-        # Process file based on its type
-        if file_extension == "parquet":
-            parquet_obj = pd.read_parquet(file_obj, **pandas_kwargs)
-            if dtype:
-                parquet_obj = parquet_obj.astype(dtype)
-            return parquet_obj
-
-        if file_extension == "csv":
-            csv_kwargs = {"header": header, "delimiter": delimiter, "encoding": encoding}
-            if dtype:
-                return pd.read_csv(file_obj, dtype=dtype, **csv_kwargs)
-            return pd.read_csv(file_obj, **{**csv_kwargs, **pandas_kwargs})
-
-        if file_extension == "xlsx":
-            excel_kwargs = {"header": header, "engine": "openpyxl"}
-            if self.local:
-                if dtype:
-                    return pd.read_excel(file_path, dtype=dtype, **excel_kwargs)
-                return pd.read_excel(file_path, **excel_kwargs)
-            if dtype:
-                return pd.read_excel(file_obj, dtype=dtype, **excel_kwargs)
-            return pd.read_excel(file_obj, **{**excel_kwargs, **pandas_kwargs})
-
-        if file_extension == "pkl":
-            if dtype:
-                return pd.read_pickle(file_obj)
-            return pd.read_pickle(file_obj, **pandas_kwargs)
-
-        if file_extension == "json":
-            return pd.read_json(file_obj, lines=True, **pandas_kwargs)
-
-        # If no recognized format, return the file object itself
-        return file_obj
-
-    def download_files_to_objects(
+    @overload
+    def download(
         self,
-        gcs_uris: list[str | Path],
-        default_file_type: str | None = None,
-        dtypes: list[dict] | dict | None = None,
-        delimiters: list[str] | str | None = None,
-        encodings: list[str] | str = "utf-8",
-        pandas_kwargs: dict | None = None,
-        headers: list[int | list[int] | None] | int | list[int] | None = 0,
-    ) -> list[dict | pd.DataFrame | io.BytesIO | io.TextIOWrapper]:
-        """Downloads multiple files from GCS to objects in memory.
-
-        Args:
-            gcs_uris: The URIs of the objects in GCS to download. If local
-                is True, these are paths to local files to read into objects.
-            default_file_type: If a URI doesn't have a file extension,
-                it will be assumed to be this type.
-            dtypes: A dictionary or list of dictionaries with column:type pairs.
-                If a single dictionary is provided, it will be used for all files.
-            delimiters: Delimiter(s) for CSV files.
-                If a single string is provided, it will be used for all files.
-            encodings: Encoding(s) for the files. Default is "utf-8".
-                If a single string is provided, it will be used for all files.
-            pandas_kwargs: Additional keyword arguments to pass to pandas.
-            headers: Header row(s) specification.
-                If a single value is provided, it will be used for all files.
-
-        Returns:
-            A list of dataframes and/or file-like objects depending on file formats.
-        """
-        # Convert single values to lists
-        dtypes_list = self._normalize_parameter(dtypes, len(gcs_uris))
-        delimiters_list = self._normalize_parameter(delimiters, len(gcs_uris))
-        encodings_list = self._normalize_parameter(encodings, len(gcs_uris))
-        headers_list = self._normalize_parameter(headers, len(gcs_uris))
-
-        # Process each URI
-        return [
-            self.download_file_to_object(
-                gcs_uri,
-                default_file_type=default_file_type,
-                dtype=dtypes_list[i],
-                delimiter=delimiters_list[i],
-                encoding=encodings_list[i],
-                pandas_kwargs=pandas_kwargs,
-                header=headers_list[i],
-            )
-            for i, gcs_uri in enumerate(gcs_uris)
-        ]
-
-    def _normalize_parameter(
-        self,
-        param: object | list[Any],
-        length: int,
-    ) -> list[Any]:
-        """Normalize a parameter to a list of the specified length.
-
-        Args:
-            param: The parameter to normalize. Can be a single value or a list.
-            length: The desired length of the resulting list.
-
-        Returns:
-            A list of the parameter values.
-        """
-        if param is None:
-            return [None] * length
-        if isinstance(param, list):
-            if len(param) == 0:
-                return [None] * length
-            if len(param) == 1:
-                return param * length
-            return param
-        return [param] * length
-
-    def download_file_to_disk(
-        self,
-        gcs_uri: str | Path,
-        local_location: str | Path | None = None,
-    ) -> Path | None:
-        """Downloads a file from GCS to the container's disk.
-
-        Args:
-            gcs_uri: The URI of the object in GCS to download. If local is
-            True, it is the path to a local file that will be
-            copied to local_location.
-            local_location: Where to save the object. If None, saves to
-            same path as the GCS URI.
-
-        Returns:
-            Path to the downloaded file or None if failed.
-        """
-        gcs_uri = Path(gcs_uri)
-        local_location = Path(local_location) if local_location else None
-
-        if self.local:
-            if not local_location:
-                return None
-
-            # Download from local
-            if gcs_uri != local_location:
-                local_location.write_bytes(gcs_uri.read_bytes())
-                return local_location
-            return None
-
-        bucket_name, file_path = self.__get_parts(str(gcs_uri))
-        bucket = self.client.bucket(bucket_name)
-        local_location = local_location if local_location else Path(file_path)
-
-        # Create directory structure if it doesn't exist
-        Path(local_location).parent.mkdir(parents=True, exist_ok=True)
-
-        # Download from GCS
-        blob = bucket.get_blob(file_path)
-        if blob:
-            blob.download_to_filename(local_location)
-            return local_location
-        return None
-
-    def download_files_to_disk(
-        self,
-        gcs_uris: list[str | Path],
-        local_locations: list[str | Path] | None = None,
-    ) -> list[Path | None]:
-        """Downloads files from GCS to the container's disk.
-
-        Args:
-            gcs_uris: The uris of the objects in GCS to download. If
-                local is True, it is the paths to local files that will be
-                copied to local_locations.
-            local_locations: Optional. The locations to save the objects.
-                If None, saves to same paths as the GCS URIs.
-
-        Returns:
-            A list of paths to the downloaded files.
-        """
-        # Normalize local_locations to match gcs_uris length
-        if local_locations is None:
-            local_locations = []
-
-        # Generate resulting locations list
-        return [
-            self.download_file_to_disk(
-                gcs_uri=gcs_uri,
-                local_location=local_locations[i] if i < len(local_locations) else None,
-            )
-            for i, gcs_uri in enumerate(gcs_uris)
-        ]
-
-    def upload_file_from_disk(
-        self,
-        gcs_uri: str | Path,
-        local_location: str | Path,
-        metadata: dict | None = None,
-    ) -> None | Path:
-        """Uploads a file to GCS from the container's hard drive.
-
-        Args:
-            gcs_uri: The URI to which the object will be uploaded. If local is
-                True, it is the path to a local file that will be copied from local_location.
-            local_location: The location of the object to upload.
-            metadata: Optional metadata to add to the object. Git hash is added
-                automatically if GITHUB_SHA is set as an environment variable.
-
-        Returns:
-            The result of blob.upload() or path string if local mode.
-        """
-        metadata = metadata or {}
-
-        # Add environment variables to metadata
-        env_vars = ["DAG_ID", "RUN_ID", "NAMESPACE", "POD_NAME", "GITHUB_SHA"]
-        metadata.update({var: os.environ[var] for var in env_vars if var in os.environ})
-
-        if self.local:
-            # Convert to Path objects
-            src_path = Path(local_location)
-            dest_path = Path(gcs_uri)
-
-            if src_path != dest_path:
-                dest_path.parent.mkdir(parents=True, exist_ok=True)
-                dest_path.write_bytes(src_path.read_bytes())
-            return dest_path
-
-        # Upload to GCS
-        bucket_name, file_path = self.__get_parts(str(gcs_uri))
-        bucket = self.client.bucket(bucket_name)
-        blob = bucket.blob(file_path)
-        blob.metadata = metadata
-        return blob.upload_from_filename(str(local_location))
-
-    def upload_files_from_disk(
-        self,
-        gcs_uris: list[str | Path],
-        local_locations: list[str | Path],
-        metadata: list[dict] | dict | None = None,
-    ) -> list[Any]:
-        """Uploads files to GCS from the container's hard drive.
-
-        Args:
-            gcs_uris: The URIs to which the objects will be uploaded. If local
-                is True, these are paths to local files that will be copied from local_locations.
-            local_locations: The locations of the objects to upload.
-            metadata: Optional metadata to add to the objects. Can be a single dict
-                applied to all files or a list of dicts. Git hash and other environment
-                variables are added automatically when available.
-
-        Returns:
-            A list of the results of blob.upload() or path strings if local mode.
-        """
-        # Normalize metadata to a list matching the length of gcs_uris
-        metadata_list = self._normalize_parameter(metadata, len(gcs_uris))
-
-        # Upload each file with its corresponding metadata
-        return [
-            self.upload_file_from_disk(gcs_uri=gcs_uri, local_location=local_locations[i], metadata=metadata_list[i])
-            for i, gcs_uri in enumerate(gcs_uris)
-        ]
-
-    def upload_file_from_object(
-        self,
-        gcs_uri: str | Path,
-        object_to_upload: pd.DataFrame | object,
-        default_file_type: str | None = None,
-        metadata: dict | None = None,
-        pandas_kwargs: dict | None = None,
+        gcs_uris: str | list[str],
         *,
-        header: bool = True,
-        index: bool = False,
-    ) -> str | None:
-        """Uploads a file to GCS from an object in memory.
+        dtype: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+    ) -> dict[
+        str,
+        Any,
+    ]: ...  # TODO: Returning type dict[str, pd.DataFrame | io.BytesIO] might be too ambiguous for user typehinting use.
+
+    def download(
+        self,
+        gcs_uris: str | list[str] | Mapping[str, str | Path],
+        **kwargs: Any,  # Use ParamSpec in future
+    ) -> ...:
+        """Downloads files from GCS to local file paths or Python objects.
+
+        This method dispatches to `download_to_file` if `gcs_uris` is a Mapping,
+        or to `download_to_object` otherwise.
+
+        When downloading to objects:
+            - Supports various file types like Parquet, CSV, XLSX, and JSON.
+            - If the file extension is not recognized, it returns an `io.BytesIO` object.
+            - For CSV files, keyword arguments like `header`, `delimiter`, `encoding` can be passed via `**kwargs`.
+            - For XLSX files, keyword arguments like `header` can be passed via `**kwargs`.
 
         Args:
-            gcs_uri: The URI to which the object will be uploaded. If local
-                is True, it is the path to a local file where the object will be written.
-            object_to_upload: Object to upload, typically a pandas DataFrame
-                (required for parquet, csv, xlsx. Otherwise is a pickle).
-            default_file_type: If the URI does not have a file type
-                ending, it will be assumed to be this type.
-            header: Whether to write out the column names (for CSV and Excel).
-                Defaults to True.
-            index: Whether to write the index or not (for CSV and Excel).
-                Defaults to False.
-            pandas_kwargs: Additional keyword arguments to pass to pandas methods.
-            metadata: Metadata to add to the object. Environment variables like
-                Git hash are added automatically when available.
+            gcs_uris (Mapping[str, str | Path] | str | list[str]):
+                Mapping of GCS URIs to local file paths for file download,
+                or a single GCS URI or list of GCS URIs for object download.
+            dtype (dict | None, optional): Optional dictionary specifying data types for columns,
+                primarily for Pandas DataFrames when downloading to objects (e.g., when reading CSV or Parquet).
+                If provided (via `**kwargs`). Defaults to None.
+            **kwargs (Any): Additional keyword arguments. These are passed to the underlying file
+                reading functions (e.g., `pd.read_parquet`, `pd.read_csv`) when downloading to objects.
 
         Returns:
-            The result from blob.upload() or file path if in local mode.
+            None | dict[str, pd.DataFrame | io.BytesIO] | pd.DataFrame | io.BytesIO:
+                - `None` if downloading to file (i.e., using a Mapping).
+                - If downloading to objects:
+                    - A dictionary mapping blob names to downloaded objects if multiple URIs result in multiple objects.
+                    - The type of object depends on the file extension.
+
+        Raises:
+            TypeError: If `gcs_uris` is not a Mapping or list.
+            FileNotFoundError: If a file in a bucket does not exist.
+            Other exceptions may be raised by GCS client or Pandas during file operations.
         """
-        pandas_kwargs = pandas_kwargs or {}
+        if isinstance(gcs_uris, Mapping):
+            return self.download_to_file(gcs_uris, **kwargs)
+        if isinstance(gcs_uris, list):
+            return self.download_to_object(gcs_uris, **kwargs)
+        msg = "gcs_uris must be a Mapping or list"
+        raise TypeError(msg)
+
+    def download_to_file(
+        self,
+        gcs_uris: Mapping[str, str | Path],
+    ) -> None:
+        """Downloads files from GCS to local file paths.
+
+        The number of GCS URIs must match the number of local file paths.
+
+        Args:
+            gcs_uris (Mapping[str, str | Path]):
+                Mapping of GCS URIs to local file paths (str or Path) where the files will be downloaded.
+
+        Raises:
+            FileNotFoundError: If a file in a bucket does not exist.
+        """
+        for gcs_uri, local_file_path in gcs_uris.items():
+            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
+            bucket = self.client.bucket(bucket_name)
+            blob = bucket.blob(file_path)
+            if blob.exists():
+                blob.download_to_filename(str(local_file_path))
+            else:
+                msg = f"Blob {file_path} does not exist in bucket {bucket_name}"
+                raise FileNotFoundError(msg)
+
+    def download_to_object(
+        self,
+        gcs_uris: str | list[str],
+        dtype: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+    ) -> dict[str, pd.DataFrame | io.BytesIO]:
+        """Downloads file(s) from GCS into Python objects.
+
+        Supports various file types like Parquet, CSV, XLSX, and JSON.
+        If the file extension is not recognized, it returns an `io.BytesIO` object.
+
+        For CSV files, keyword arguments like `header`, `delimiter`, `encoding` can be passed.
+        For XLSX files, keyword arguments like `header` can be passed.
+
+        Args:
+            gcs_uris (str | list[str]): A single GCS URI or a list of GCS URIs to download.
+            dtype (dict | None): Optional dictionary specifying data types for columns, primarily for
+                Pandas DataFrames (e.g., when reading CSV or Parquet).
+            **kwargs (Any): Additional keyword arguments passed to the underlying file reading
+                functions (e.g., `pd.read_parquet`, `pd.read_csv`).
+
+        Returns:
+            dict[pd.DataFrame | io.BytesIO]: A dictionary mapping blob names to the downloaded objects.
+                The type of object depends on the file extension.
+
+        Raises:
+            FileNotFoundError: If a file in a bucket does not exist.
+        """
+        import pandas as pd
+
+        if not isinstance(gcs_uris, list):
+            gcs_uris = [gcs_uris]
+
+        data_dict = {}
+        for blob in (blob for uri in gcs_uris for blob in self.uri_to_blobs(uri)):
+            if not blob.exists():
+                msg = f"Blob {blob.name} does not exist in bucket {blob.bucket.name}"
+                raise FileNotFoundError(msg)
+
+            data = io.BytesIO(blob.download_as_bytes())
+
+            file_name = cast("str", blob.name)
+            file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_name.endswith(ext)), None)
+
+            if file_extension == "parquet":
+                parquet_obj = pd.read_parquet(data, **kwargs)
+                if dtype:
+                    parquet_obj = parquet_obj.astype(dtype)
+
+            elif file_extension == "csv":
+                kwargs.setdefault("encoding", "utf-8")
+                file_obj = pd.read_csv(data, dtype=dtype, **kwargs) if dtype else pd.read_csv(data, **kwargs)
+
+            elif file_extension == "xlsx":
+                kwargs.setdefault("engine", "openpyxl")
+                file_obj = pd.read_excel(data, dtype=dtype, **kwargs) if dtype else pd.read_excel(data, **kwargs)
+
+            elif file_extension == "json":
+                file_obj = pd.read_json(data, lines=True, **kwargs)
+
+            else:
+                file_obj = data
+
+            # If no recognized format, return the file object itself
+            data_dict[blob.name] = file_obj
+
+        return data_dict
+
+    @overload
+    def upload(
+        self,
+        gcs_uris: Mapping[str | Path, str],
+        metadata: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+    ) -> None: ...
+
+    @overload
+    def upload(
+        self,
+        gcs_uris: Mapping[object, str],
+        metadata: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+    ) -> None: ...
+
+    def upload(
+        self,
+        gcs_uris: Mapping[str | Path, str] | Mapping[object, str],
+        metadata: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future
+    ) -> None:
+        """Uploads local files or in-memory Python objects to GCS.
+
+        This method serves as a dispatcher for uploading either files from the
+        local filesystem or Python objects directly to GCS. You must provide
+        either a Mapping of local file paths to GCS URIs or a Mapping of Python objects to GCS URIs.
+
+        The number of `gcs_uris` must match the number of files or objects.
+
+        Metadata can be provided for the uploaded objects. Environment variables
+        like `DAG_ID`, `RUN_ID`, `NAMESPACE`, `POD_NAME`, `GITHUB_SHA` are
+        automatically added to the metadata if present.
+
+        For object uploads, the method attempts to infer the file type from the
+        GCS URI's extension (e.g., .parquet, .csv, .xlsx, .json) and uses
+        appropriate serialization methods (e.g., `to_parquet` for Pandas DataFrames).
+
+        Args:
+            gcs_uris (Mapping[str | Path, str] | Mapping[object, str]):
+                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem,
+                or Mapping of Python objects to GCS URIs to upload. Supported object types depend on the
+                file extension of the `gcs_uri` (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json).
+            metadata (dict | None): Optional dictionary of metadata to associate with the uploaded GCS object(s).
+            **kwargs (Any): Additional keyword arguments passed to the underlying upload or serialization functions
+                (e.g., `pd.DataFrame.to_parquet`, `pd.DataFrame.to_csv`).
+
+        Raises:
+            TypeError: If `gcs_uris` is not a Mapping.
+            ValueError: If uploading an object and no compatible file extension is found in the `gcs_uri`.
+        """
+        if isinstance(gcs_uris, Mapping) and all(isinstance(k, (str, Path)) for k in gcs_uris):
+            self.upload_file(gcs_uris=cast("Mapping[str | Path, str]", gcs_uris), metadata=metadata, **kwargs)
+        elif isinstance(gcs_uris, Mapping):
+            # str counts as objects, however JSON can also be str so cannot do explicit checks for upload_object
+            self.upload_object(gcs_uris=cast("Mapping[object, str]", gcs_uris), metadata=metadata, **kwargs)
+        else:
+            msg = "gcs_uris must be a Mapping"
+            raise TypeError(msg)
+
+    def upload_file(
+        self,
+        gcs_uris: Mapping[str | Path, str],
+        metadata: dict | None = None,
+    ) -> None:
+        """Uploads local file(s) to GCS.
+
+        The number of GCS URIs must match the number of files.
+        Metadata can be provided, and common environment variables are
+        automatically included.
+
+        Args:
+            gcs_uris (Mapping[str | Path, str]):
+                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem.
+            metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
+        """
         metadata = metadata or {}
 
         # Add environment variables to metadata
         env_vars = ["DAG_ID", "RUN_ID", "NAMESPACE", "POD_NAME", "GITHUB_SHA"]
-        metadata.update({var: os.environ[var] for var in env_vars if var in os.environ})
+        for var in env_vars:
+            if var in os.environ:
+                metadata.setdefault(var, os.environ[var])
 
-        # Setup GCS or local path
-        gcs_uri_str = str(gcs_uri)
-        if not self.local:
-            bucket_name, file_path = self.__get_parts(gcs_uri_str)
+        for file, gcs_uri in gcs_uris.items():
+            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
             blob.metadata = metadata
-        else:
-            file_path = gcs_uri_str
+            blob.upload_from_filename(str(file))
 
-            # Fix type hinting for non local cases
-            blob = None
-            blob = cast("Blob", blob)
-
-        # Determine file type
-        file_extension = next(
-            (ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_path.endswith(ext)),
-            default_file_type,
-        )
-
-        # Handle based on file type
-        if file_extension == "parquet" and isinstance(object_to_upload, pd.DataFrame):
-            if self.local:
-                object_to_upload.to_parquet(gcs_uri_str, **pandas_kwargs)
-                return gcs_uri_str
-            file_obj = io.BytesIO()
-            object_to_upload.to_parquet(file_obj, **pandas_kwargs)
-            file_obj.seek(0)
-            return blob.upload_from_file(file_obj)
-
-        if file_extension == "csv" and isinstance(object_to_upload, pd.DataFrame):
-            if self.local:
-                object_to_upload.to_csv(gcs_uri_str, header=header, index=index, **pandas_kwargs)
-                return gcs_uri_str
-            csv_string = object_to_upload.to_csv(encoding="utf-8", header=header, index=index, **pandas_kwargs)
-            return blob.upload_from_string(csv_string)
-
-        if file_extension == "xlsx" and isinstance(object_to_upload, pd.DataFrame):
-            if self.local:
-                object_to_upload.to_excel(gcs_uri_str, header=header, index=index, **pandas_kwargs)
-                return gcs_uri_str
-            file_obj = io.BytesIO()
-            object_to_upload.to_excel(file_obj, header=header, index=index, **pandas_kwargs)
-            file_obj.seek(0)
-            return blob.upload_from_file(file_obj)
-
-        if file_extension == "pkl":
-            if self.local:
-                Path(gcs_uri).write_bytes(pickle.dumps(object_to_upload))
-                return gcs_uri_str
-            file_obj = io.BytesIO(pickle.dumps(object_to_upload))
-            file_obj.seek(0)
-            return blob.upload_from_file(file_obj)
-
-        if file_extension == "json":
-            if self.local:
-                Path(gcs_uri).write_text(json.dumps(object_to_upload))
-                return gcs_uri_str
-            json_string = json.dumps(object_to_upload)
-            return blob.upload_from_string(json_string)
-
-        # Default to pickle for unknown types
-        if self.local:
-            Path(gcs_uri).write_bytes(pickle.dumps(object_to_upload))
-            return gcs_uri_str
-        file_obj = io.BytesIO(pickle.dumps(object_to_upload))
-        file_obj.seek(0)
-        return blob.upload_from_file(file_obj)
-
-    def upload_files_from_objects(
+    def upload_object(
         self,
-        gcs_uris: list[str | Path],
-        objects_to_upload: list[pd.DataFrame | Any],
-        default_file_type: str | None = None,
-        metadata: list[dict] | dict | None = None,
-        pandas_kwargs: dict | None = None,
-        *,
-        headers: list[bool] | bool = True,
-        indices: list[bool] | bool = False,
-    ) -> list[str | None]:
-        """Uploads files to GCS from objects in memory.
+        gcs_uris: Mapping[object, str],
+        metadata: dict | None = None,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+    ) -> None:
+        """Uploads Python object(s) to GCS.
+
+        The method attempts to serialize objects based on the GCS URI's file
+        extension (e.g., .parquet, .csv, .xlsx, .json).
+        The number of GCS URIs must match the number of objects.
+        Metadata can be provided, and common environment variables are
+        automatically included.
 
         Args:
-            gcs_uris: The URIs to which the objects will be uploaded. If
-                local is True, these are paths to local files where the objects will be written.
-            objects_to_upload: Objects to upload, typically pandas DataFrames.
-            default_file_type: If URIs don't have file type endings,
-                they will be assumed to be this type.
-            metadata: Optional metadata to add to each object. Can be a single dict
-                applied to all files or a list of dicts. Environment variables are
-                added automatically when available.
-            headers: Whether to write out column names (for CSV and Excel).
-                Can be a single boolean or a list of booleans.
-            indices: Whether to write the index or not (for CSV and Excel).
-                Can be a single boolean or a list of booleans.
-            pandas_kwargs: Additional keyword arguments to pass to pandas methods.
+            gcs_uris (Mapping[object, str]):
+                Mapping of Python objects to GCS URIs to upload. Supported types include
+                `pd.DataFrame` (for .parquet, .csv, .xlsx) and `str` (for .json).
+            metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
+            **kwargs (Any): Additional keyword arguments passed to the serialization
+                functions (e.g., `to_parquet`, `to_csv`).
 
-        Returns:
-            A list of results from blob.upload() or file paths if in local mode.
+        Raises:
+            ValueError: If no compatible file extension is found in the `gcs_uri`
+                for serializing the object.
         """
-        # Normalize parameters to match length of gcs_uris
-        metadata_list = self._normalize_parameter(metadata, len(gcs_uris))
-        headers_list = self._normalize_parameter(headers, len(gcs_uris))
-        indices_list = self._normalize_parameter(indices, len(gcs_uris))
+        import pandas as pd
 
-        # Upload each object with its corresponding parameters
-        return [
-            self.upload_file_from_object(
-                gcs_uri=gcs_uri,
-                object_to_upload=objects_to_upload[i],
-                default_file_type=default_file_type,
-                metadata=metadata_list[i],
-                header=headers_list[i],
-                index=indices_list[i],
-                pandas_kwargs=pandas_kwargs,
-            )
-            for i, gcs_uri in enumerate(gcs_uris)
-        ]
+        metadata = metadata or {}
 
+        # Add environment variables to metadata
+        env_vars = ["DAG_ID", "RUN_ID", "NAMESPACE", "POD_NAME", "GITHUB_SHA"]
+        for var in env_vars:
+            if var in os.environ:
+                metadata.setdefault(var, os.environ[var])
 
-GCS = GCSFileIO
+        for object_to_upload, gcs_uri in gcs_uris.items():
+            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
+            bucket = self.client.bucket(bucket_name)
+            blob = bucket.blob(file_path)
+            blob.metadata = metadata
+
+            # Determine file type
+            file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_path.endswith(ext)), None)
+
+            # Handle based on file type
+            if file_extension == "parquet" and isinstance(object_to_upload, pd.DataFrame):
+                file_obj = io.BytesIO()
+                object_to_upload.to_parquet(file_obj, **kwargs)
+                file_obj.seek(0)
+                blob.upload_from_file(file_obj)
+
+            elif file_extension == "csv" and isinstance(object_to_upload, pd.DataFrame):
+                kwargs.setdefault("encoding", "utf-8")
+                csv_string = object_to_upload.to_csv(**kwargs)
+                blob.upload_from_string(csv_string)
+
+            elif file_extension == "xlsx" and isinstance(object_to_upload, pd.DataFrame):
+                file_obj = io.BytesIO()
+                object_to_upload.to_excel(file_obj, **kwargs)
+                file_obj.seek(0)
+                blob.upload_from_file(file_obj)
+
+            elif file_extension == "json" and isinstance(object_to_upload, str):
+                json_string = json.dumps(object_to_upload)
+                blob.upload_from_string(json_string)
+
+            else:
+                msg = (
+                    f"No compatible file extension '{file_extension}' found for object type "
+                    f"'{type(object_to_upload)!s}'."
+                )
+                raise ValueError(msg)

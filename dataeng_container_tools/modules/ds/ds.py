@@ -6,9 +6,9 @@ filtering, ordering, and updating task information.
 
 Typical usage example:
 
-    db = DB("task_kind", db_secret_location="/path/to/credentials.json")
-    client = db.client
-    db.handle_task(client, {
+    ds = DS("task_kind", ds_secret_location="/path/to/credentials.json")
+    client = ds.client
+    ds.handle_task(client, {
         "dag_id": "my_dag",
         "run_id": "run_123",
         "airflow_task_id": "my_task"
@@ -23,17 +23,17 @@ import os
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from google.cloud import datastore
-
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from google.cloud import datastore
+
 logger = logging.getLogger("Container Tools")
 
 
-class DB(BaseModule):
+class DS(BaseModule):
     """Handles all Google Cloud Datastore operations.
 
     This class provides methods for interacting with Google Cloud Datastore,
@@ -46,8 +46,8 @@ class DB(BaseModule):
         client: The Datastore client instance.
     """
 
-    MODULE_NAME: ClassVar[str] = "DB"
-    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"DB": "/vault/secrets/gcp-credentials.json"}
+    MODULE_NAME: ClassVar[str] = "DS"
+    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"DS": "/vault/secrets/gcp-credentials.json"}
 
     def __init__(
         self,
@@ -57,7 +57,7 @@ class DB(BaseModule):
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
     ) -> None:
-        """Initialize the DB module.
+        """Initialize the DS module.
 
         Args:
             task_kind: The kind of task entries this instance will handle.
@@ -68,6 +68,8 @@ class DB(BaseModule):
             use_file_fallback (bool): If True, attempts to use the default secret file
                 as a fallback source when both primary and command-line sources fail.
         """
+        from google.cloud import datastore
+
         self.current_task_kind = task_kind
 
         gcp_credentials = BaseModuleUtilities.parse_secret_with_fallback(
@@ -163,6 +165,8 @@ class DB(BaseModule):
             order_task_entries_params: Optional parameters for ordering task entries
                 when retrieving existing entries.
         """
+        from google.cloud import datastore
+
         # Get commit ID from environment if available
         commit_id = os.environ.get("GITHUB_SHA", "")
 

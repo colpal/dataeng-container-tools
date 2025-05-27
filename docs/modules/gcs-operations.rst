@@ -257,13 +257,7 @@ However, these emulators are a bit outdated and do not support globs at the time
     gcs = GCSFileIO(local=True)
 
     # Download a file to local disk
-    gcs.download(
-        gcs_uris="/emulated-gcs-bucket/file.csv",
-        local_files="./file.csv",
-    )
+    gcs.download({"/emulated-gcs-bucket/file.csv": "./file.csv"})
 
     # Upload a local file
-    gcs.upload(
-        gcs_uris="/emulated-gcs-bucket/file.csv",
-        files="./file.csv",
-    )
+    gcs.upload({"/emulated-gcs-bucket/file.csv", files="./file.csv"})

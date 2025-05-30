@@ -18,14 +18,13 @@ from __future__ import annotations
 import io
 import json
 import os
-from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Final, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
 
     import pandas as pd
     from google.cloud import storage
@@ -64,8 +63,15 @@ class GCSUriUtils:
 
         Returns:
             tuple[str, str]: A tuple containing the bucket name and the file path.
+
+        Raises:
+            ValueError: If the URI does not start with the GCS prefix 'gs://'.
         """
-        gcs_uri = gcs_uri.removeprefix("gs://")
+        if not gcs_uri.startswith(GCSUriUtils.PREFIX):
+            msg = f"Invalid GCS URI: '{gcs_uri}'. URI must start with '{GCSUriUtils.PREFIX}'"
+            raise ValueError(msg)
+
+        gcs_uri = gcs_uri.removeprefix(GCSUriUtils.PREFIX)
         bucket = gcs_uri[: gcs_uri.find("/")]
         file_path = gcs_uri[gcs_uri.find("/") + 1 :]
         return bucket, file_path
@@ -154,13 +160,13 @@ class GCSFileIO(BaseModule):
     @overload
     def download(
         self,
-        gcs_uris: Mapping[str, str | Path],
+        src_dst: Sequence[tuple[str, str | Path]],
     ) -> None: ...
 
     @overload
     def download(
         self,
-        gcs_uris: str | list[str],
+        src_dst: str | list[str],
         *,
         dtype: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
@@ -171,12 +177,12 @@ class GCSFileIO(BaseModule):
 
     def download(
         self,
-        gcs_uris: str | list[str] | Mapping[str, str | Path],
+        src_dst: str | list[str] | Sequence[tuple[str, str | Path]],
         **kwargs: Any,  # Use ParamSpec in future
     ) -> ...:
         """Downloads files from GCS to local file paths or Python objects.
 
-        This method dispatches to `download_to_file` if `gcs_uris` is a Mapping,
+        This method dispatches to `download_to_file` if `src_dst` is a sequence of tuples,
         or to `download_to_object` otherwise.
 
         When downloading to objects:
@@ -186,8 +192,8 @@ class GCSFileIO(BaseModule):
             - For XLSX files, keyword arguments like `header` can be passed via `**kwargs`.
 
         Args:
-            gcs_uris (Mapping[str, str | Path] | str | list[str]):
-                Mapping of GCS URIs to local file paths for file download,
+            src_dst (Sequence[tuple[str, str | Path]] | str | list[str]):
+                Sequence of tuples of (GCS URI, local file path) for file download,
                 or a single GCS URI or list of GCS URIs for object download.
             dtype (dict | None, optional): Optional dictionary specifying data types for columns,
                 primarily for Pandas DataFrames when downloading to objects (e.g., when reading CSV or Parquet).
@@ -197,39 +203,56 @@ class GCSFileIO(BaseModule):
 
         Returns:
             None | dict[str, pd.DataFrame | io.BytesIO] | pd.DataFrame | io.BytesIO:
-                - `None` if downloading to file (i.e., using a Mapping).
+                - `None` if downloading to file (i.e., using tuples).
                 - If downloading to objects:
                     - A dictionary mapping blob names to downloaded objects if multiple URIs result in multiple objects.
                     - The type of object depends on the file extension.
 
         Raises:
-            TypeError: If `gcs_uris` is not a Mapping or list.
+            TypeError: If `src_dst` is not a supported type.
             FileNotFoundError: If a file in a bucket does not exist.
             Other exceptions may be raised by GCS client or Pandas during file operations.
         """
-        if isinstance(gcs_uris, Mapping):
-            return self.download_to_file(gcs_uris, **kwargs)
-        if isinstance(gcs_uris, list):
-            return self.download_to_object(gcs_uris, **kwargs)
-        msg = "gcs_uris must be a Mapping or list"
+        # File download (sequence of tuples)
+        if isinstance(src_dst, (list, zip)):
+            first_item = next(iter(src_dst), None)
+            if first_item and isinstance(first_item, tuple):
+                src_dst = cast("Sequence[tuple[str, str | Path]]", src_dst)
+                return self.download_to_file(src_dst, **kwargs)
+
+        # Object download (str/list[str])
+        if isinstance(src_dst, (str, list)):
+            src_dst = cast("str | list", src_dst)
+            return self.download_to_object(src_dst, **kwargs)
+
+        msg = "src_dst must be a sequence of tuples, string, or list of strings"
         raise TypeError(msg)
 
     def download_to_file(
         self,
-        gcs_uris: Mapping[str, str | Path],
+        src_dst: Sequence[tuple[str, str | Path]],
     ) -> None:
         """Downloads files from GCS to local file paths.
 
-        The number of GCS URIs must match the number of local file paths.
-
         Args:
-            gcs_uris (Mapping[str, str | Path]):
-                Mapping of GCS URIs to local file paths (str or Path) where the files will be downloaded.
+            src_dst (Sequence[tuple[str, str | Path]]):
+                Sequence of tuples of (GCS URI, local file path) where the files will be downloaded.
 
         Raises:
             FileNotFoundError: If a file in a bucket does not exist.
+            ValueError: If a GCS URI contains wildcards, which are not supported for direct file downloads.
         """
-        for gcs_uri, local_file_path in gcs_uris.items():
+        for gcs_uri, local_file_path in src_dst:
+            # Check for wildcards which are not supported for direct file downloads
+            # TODO: Support wildcards only if a bool/Path to download the files as is (according to GCS) is passed
+            if any(wildcard in gcs_uri for wildcard in ["*", "?", "[", "]", "{", "}"]):
+                msg = (
+                    f"Wildcards are not supported for direct file downloads. "
+                    f"URI '{gcs_uri}' contains wildcards. "
+                    f"Use download_to_object() instead for glob pattern matching."
+                )
+                raise ValueError(msg)
+
             bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
@@ -310,7 +333,7 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        gcs_uris: Mapping[str | Path, str],
+        src_dst: Sequence[tuple[str | Path, str]],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
@@ -318,14 +341,14 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(
         self,
-        gcs_uris: Mapping[object, str],
+        src_dst: Sequence[tuple[object, str]],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
 
     def upload(
         self,
-        gcs_uris: Mapping[str | Path, str] | Mapping[object, str],
+        src_dst: Sequence[tuple[str | Path, str]] | Sequence[tuple[object, str]],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future
     ) -> None:
@@ -333,9 +356,7 @@ class GCSFileIO(BaseModule):
 
         This method serves as a dispatcher for uploading either files from the
         local filesystem or Python objects directly to GCS. You must provide
-        either a Mapping of local file paths to GCS URIs or a Mapping of Python objects to GCS URIs.
-
-        The number of `gcs_uris` must match the number of files or objects.
+        a sequence of (source, GCS URI) tuples.
 
         Metadata can be provided for the uploaded objects. Environment variables
         like `DAG_ID`, `RUN_ID`, `NAMESPACE`, `POD_NAME`, `GITHUB_SHA` are
@@ -346,41 +367,43 @@ class GCSFileIO(BaseModule):
         appropriate serialization methods (e.g., `to_parquet` for Pandas DataFrames).
 
         Args:
-            gcs_uris (Mapping[str | Path, str] | Mapping[object, str]):
-                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem,
-                or Mapping of Python objects to GCS URIs to upload. Supported object types depend on the
-                file extension of the `gcs_uri` (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json).
+            src_dst (Sequence[tuple[str | Path, str]] | Sequence[tuple[object, str]]):
+                Sequence of tuples where each tuple contains (source, GCS URI).
+                Source can be local file paths (str or Path) or Python objects.
+                Supported object types depend on the file extension of the `gcs_uri`
+                (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json).
             metadata (dict | None): Optional dictionary of metadata to associate with the uploaded GCS object(s).
             **kwargs (Any): Additional keyword arguments passed to the underlying upload or serialization functions
                 (e.g., `pd.DataFrame.to_parquet`, `pd.DataFrame.to_csv`).
 
         Raises:
-            TypeError: If `gcs_uris` is not a Mapping.
+            TypeError: If `src_dst` is not a supported type.
             ValueError: If uploading an object and no compatible file extension is found in the `gcs_uri`.
         """
-        if isinstance(gcs_uris, Mapping) and all(isinstance(k, (str, Path)) for k in gcs_uris):
-            self.upload_file(gcs_uris=cast("Mapping[str | Path, str]", gcs_uris), metadata=metadata, **kwargs)
-        elif isinstance(gcs_uris, Mapping):
-            # str counts as objects, however JSON can also be str so cannot do explicit checks for upload_object
-            self.upload_object(gcs_uris=cast("Mapping[object, str]", gcs_uris), metadata=metadata, **kwargs)
-        else:
-            msg = "gcs_uris must be a Mapping"
-            raise TypeError(msg)
+        first_item = next(iter(src_dst), None)
+        if not first_item:
+            return  # Empty input
+
+        source, _ = first_item
+        if isinstance(source, (str, Path)):  # File upload
+            src_dst = cast("Sequence[tuple[str | Path, str]]", src_dst)
+            self.upload_file(src_dst=src_dst, metadata=metadata, **kwargs)
+        else:  # Assume object upload
+            self.upload_object(src_dst=src_dst, metadata=metadata, **kwargs)
 
     def upload_file(
         self,
-        gcs_uris: Mapping[str | Path, str],
+        src_dst: Sequence[tuple[str | Path, str]],
         metadata: dict | None = None,
     ) -> None:
         """Uploads local file(s) to GCS.
 
-        The number of GCS URIs must match the number of files.
         Metadata can be provided, and common environment variables are
         automatically included.
 
         Args:
-            gcs_uris (Mapping[str | Path, str]):
-                Mapping of local file paths (str or Path) to GCS URIs to upload from the local filesystem.
+            src_dst (Sequence[tuple[str | Path, str]]):
+                Sequence of tuples containing (local file path, GCS URI) pairs to upload from the local filesystem.
             metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
         """
         metadata = metadata or {}
@@ -391,7 +414,7 @@ class GCSFileIO(BaseModule):
             if var in os.environ:
                 metadata.setdefault(var, os.environ[var])
 
-        for file, gcs_uri in gcs_uris.items():
+        for file, gcs_uri in src_dst:
             bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
@@ -400,7 +423,7 @@ class GCSFileIO(BaseModule):
 
     def upload_object(
         self,
-        gcs_uris: Mapping[object, str],
+        src_dst: Sequence[tuple[object, str]],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None:
@@ -408,13 +431,12 @@ class GCSFileIO(BaseModule):
 
         The method attempts to serialize objects based on the GCS URI's file
         extension (e.g., .parquet, .csv, .xlsx, .json).
-        The number of GCS URIs must match the number of objects.
         Metadata can be provided, and common environment variables are
         automatically included.
 
         Args:
-            gcs_uris (Mapping[object, str]):
-                Mapping of Python objects to GCS URIs to upload. Supported types include
+            src_dst (Sequence[tuple[object, str]]):
+                Sequence of tuples containing (Python object, GCS URI) pairs to upload. Supported types include
                 `pd.DataFrame` (for .parquet, .csv, .xlsx) and `str` (for .json).
             metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
             **kwargs (Any): Additional keyword arguments passed to the serialization
@@ -430,11 +452,12 @@ class GCSFileIO(BaseModule):
 
         # Add environment variables to metadata
         env_vars = ["DAG_ID", "RUN_ID", "NAMESPACE", "POD_NAME", "GITHUB_SHA"]
+
         for var in env_vars:
             if var in os.environ:
                 metadata.setdefault(var, os.environ[var])
 
-        for object_to_upload, gcs_uri in gcs_uris.items():
+        for object_to_upload, gcs_uri in src_dst:
             bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)

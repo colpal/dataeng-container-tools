@@ -3,6 +3,6 @@
 from .base_module import BaseModule, BaseModuleUtilities
 from .ds import DS
 from .gcs import GCSFileIO
-from .sf import SF
+from .snowflake import Snowflake
 
-__all__ = ["DS", "BaseModule", "BaseModuleUtilities", "GCSFileIO", "SF"]
+__all__ = ["DS", "BaseModule", "BaseModuleUtilities", "GCSFileIO", "Snowflake"]

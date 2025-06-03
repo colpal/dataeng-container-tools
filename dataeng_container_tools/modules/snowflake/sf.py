@@ -7,12 +7,10 @@ Example use case:
 
 from __future__ import annotations
 
-import json
 import logging
+from typing import ClassVar
 
-import snowflake.connector
-
-from dataeng_container_tools.modules import BaseModule
+from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 logger = logging.getLogger("Container Tools")
 
@@ -26,7 +24,7 @@ class Snowflake(BaseModule):
 
     Attributes:
     ----------
-    sf_secret_path : str
+    sf_secret_location : str
         Path to vault secrets.
     role : str
         snowflake role needed for connection
@@ -42,6 +40,9 @@ class Snowflake(BaseModule):
         tag of query performed
     """
 
+    MODULE_NAME: ClassVar[str] = "Snowflake"
+    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"Snowflake": "/vault/secrets/sf_creds.json"}
+
     def __init__(
         self,
         role: str,
@@ -50,11 +51,22 @@ class Snowflake(BaseModule):
         warehouse: str,
         account: str,
         query_tag: str,
-        sf_secret_path: str,
+        sf_secret_location: str,
+        use_cla_fallback: bool = True,
+        use_file_fallback: bool = True,
     ) -> None:
         """Initialize a snowflake connection."""
-        with open(sf_secret_path) as f:
-            sf_vault_json = json.load(f)
+        import snowflake.connector as sc
+
+        sf_creds: str | dict[str, str] | None = BaseModuleUtilities.parse_secret_with_fallback(
+            sf_secret_location,
+            self.MODULE_NAME if use_cla_fallback else None,
+            self.DEFAULT_SECRET_PATHS[self.MODULE_NAME] if use_file_fallback else None,
+        )
+
+        if not sf_creds:
+            msg = "Snopwflake credentials not found"
+            raise FileNotFoundError(msg)
 
         self.role = role
         self.database = database
@@ -62,13 +74,13 @@ class Snowflake(BaseModule):
         self.warehouse = warehouse
         self.account = account
         self.query_tag = query_tag
-        self.private_key_file = sf_vault_json["rsa_private_key"]
-        self.user = sf_vault_json["username"]
+        self.private_key_file = sf_creds["rsa_private_key"]
+        self.user = sf_creds["username"]
 
-        self.ctx = snowflake.connector.connect(
+        self.ctx = sc.connect(
             user=user,
             account=account,
-            private_key=private_key,
+            private_key=private_key_file,
             warehouse=warehouse,
             database=database,
             schema=schema,

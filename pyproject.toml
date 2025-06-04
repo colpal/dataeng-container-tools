@@ -28,7 +28,7 @@ download = "https://github.com/colpal/dataEng-container-tools/releases"
 tracker = "https://github.com/colpal/dataEng-container-tools/issues"
 
 [project.optional-dependencies]
-dev = ["ruff==0.11.8", "pytest==8.3.5", "pytest-cov==6.11"]
+dev = ["ruff==0.11.8", "pytest==8.3.5", "pytest-cov==6.11", "types-psutil", "types-requests", "types-setuptools", "pandas-stubs"]
 
 [build-system]
 requires = ["setuptools>=42", "setuptools-scm"]
@@ -74,3 +74,7 @@ max-complexity = 20
     "S603",   # Subprocess
     "SLF001", # Private member access
 ]
+
+[tool.pyright]
+pythonVersion = "3.9"
+typeCheckingMode = "standard"

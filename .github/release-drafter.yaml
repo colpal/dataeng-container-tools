@@ -8,18 +8,29 @@ categories:
   - title: "✨ New Features"
     labels:
       - "feature"
-      - "enhancement"
+      - "feat"
   - title: "🐛 Bug Fixes"
     labels:
       - "fix"
       - "bugfix"
       - "bug"
+  - title: "🚀 Enhancements"
+    labels:
+      - "enhancement"
+      - "enhance"
+      - "improvement"
+      - "improve"
+      - "refactor"
+      - "performance"
+  - title: "🧰 Maintenance"
+    label:
+      - "maintenance"
+      - "chore"
+      - "ci"
   - title: "📝 Documentation"
     labels:
       - "documentation"
       - "docs"
-  - title: "🧰 Maintenance"
-    label: "chore"
   - title: "⬆️ Dependencies"
     labels:
       - "dependencies"
@@ -79,10 +90,6 @@ autolabeler:
       - "/breaking/i"
 
 template: |
-  ## What's Changed
+  ## Changes
 
   $CHANGES
-
-  ## Contributors
-
-  $CONTRIBUTORS

@@ -40,8 +40,8 @@ class Snowflake(BaseModule):
         tag of query performed
     """
 
-    MODULE_NAME: ClassVar[str] = "Snowflake"
-    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"Snowflake": "/vault/secrets/sf_creds.json"}
+    MODULE_NAME: ClassVar[str] = "SF"
+    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"SF": "/vault/secrets/sf_creds.json"}
 
     def __init__(
         self,

@@ -13,7 +13,7 @@
     jobs:
       update_major_minor_tags:
         name: Make sure major and minor tags are up to date on a patch release
-        runs-on: [self-hosted, org]
+        runs-on: ubuntu-latest
         permissions:
           contents: write
         steps:

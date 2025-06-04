@@ -23,21 +23,19 @@ class Snowflake(BaseModule):
     This class creates a connection to a snowflake table and executes custom queries entered.
 
     Attributes:
-    ----------
-    sf_secret_location : str
-        Path to vault secrets.
-    role : str
-        snowflake role needed for connection
-    database : str
-        snowflake database the user wants to connect to
-    schema : str
-        snowflake schema the user wants to connect to
-    warehouse : str
-        snowflake warehouse the user wants to connect to
-    account : str
-        snowflake account used for connection
-    query_tag : str
-        tag of query performed
+        sf_secret_location (str): Path to vault secrets.
+
+        role (str): snowflake role needed for connection
+
+        database (str): snowflake database the user wants to connect to
+
+        schema (str): snowflake schema the user wants to connect to
+
+        warehouse (str): snowflake warehouse the user wants to connect to
+
+        account (str): snowflake account used for connection
+
+        query_tag (str): tag of query performed
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
@@ -52,6 +50,7 @@ class Snowflake(BaseModule):
         account: str,
         query_tag: str,
         sf_secret_location: str,
+        *,
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
     ) -> None:
@@ -74,13 +73,13 @@ class Snowflake(BaseModule):
         self.warehouse = warehouse
         self.account = account
         self.query_tag = query_tag
-        self.private_key_file = sf_creds["rsa_private_key"]
+        self.private_key = sf_creds["rsa_private_key"]
         self.user = sf_creds["username"]
 
         self.ctx = sc.connect(
             user=user,
             account=account,
-            private_key=private_key_file,
+            private_key=private_key,
             warehouse=warehouse,
             database=database,
             schema=schema,

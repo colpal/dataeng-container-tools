@@ -62,32 +62,57 @@ version-resolver:
   default: patch
 
 autolabeler:
+  - label: "major"
+    title:
+      - "/major:/i"
+  - label: "minor"
+    title:
+      - "/minor:/i"
+  - label: "patch"
+    title:
+      - "/patch:/i"
+  - label: "breaking-change"
+    title:
+      - "/breaking-change:/i"
+      - "/breaking:/i"
+  - label: "feature"
+    title:
+      - "/feature:/i"
+      - "/feat:/i"
+  - label: "bugfix"
+    title:
+      - "/fix:/i"
+      - "/bugfix:/i"
+      - "/bug:/i"
+  - label: "enhancement"
+    title:
+      - "/enhancement:/i"
+      - "/enhance:/i"
+      - "/improve:/i"
+      - "/improvement:/i"
+      - "/refactor:/i"
+      - "/performance:/i"
+  - label: "chore"
+    files:
+      - ".github/**/*"
+    title:
+      - "/maintenance:/i"
+      - "/chore:/i"
+      - "/ci:/i"
   - label: "documentation"
     files:
       - "*.md"
       - "docs/**/*"
-  - label: "bug"
     title:
-      - "/fix/i"
-  - label: "feature"
-    title:
-      - "/feat/i"
-      - "/feature/i"
-  - label: "enhancement"
-    title:
-      - "/enhance/i"
-      - "/improve/i"
-      - "/improvement/i"
+      - "/documentation:/i"
+      - "/docs:/i"
   - label: "dependencies"
     files:
       - "pyproject.toml"
       - "setup.py"
-  - label: "chore"
-    files:
-      - ".github/**/*"
-  - label: "breaking-change"
     title:
-      - "/breaking/i"
+      - "/dependencies:/i"
+      - "/deps:/i"
 
 template: |
   ## Changes

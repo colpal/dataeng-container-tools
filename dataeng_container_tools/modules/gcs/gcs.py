@@ -307,9 +307,9 @@ class GCSFileIO(BaseModule):
             file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_name.endswith(ext)), None)
 
             if file_extension == "parquet":
-                parquet_obj = pd.read_parquet(data, **kwargs)
+                file_obj = pd.read_parquet(data, **kwargs)
                 if dtype:
-                    parquet_obj = parquet_obj.astype(dtype)
+                    file_obj = file_obj.astype(dtype)
 
             elif file_extension == "csv":
                 kwargs.setdefault("encoding", "utf-8")

@@ -46,9 +46,10 @@ class SecretManager:
 
         # Parse secret as str text
         try:
-            content: str | dict = file_path.read_text().strip()
+            content: str = file_path.read_text().strip()
         except OSError:
             logger.exception("File %s cannot be read.", file_path.as_posix())
+            return None
 
         # Try optimistically parsing as JSON
         try:
@@ -106,7 +107,7 @@ class SecretLocations(dict[str, str]):
     # Add type hints for common attributes
     GCS: str
     SF: str
-    DB: str
+    DS: str
 
     _instance: ClassVar[SecretLocations | None] = None
 
@@ -122,7 +123,7 @@ class SecretLocations(dict[str, str]):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def update(self, new_secret_locations: dict[str, str], *, set_attr: bool = False) -> None:
+    def update(self, new_secret_locations: dict[str, str], *, set_attr: bool = False) -> None:  # type: ignore  # noqa: PGH003
         """Updates the secret locations with new values and optionally sets them as attributes.
 
         Args:

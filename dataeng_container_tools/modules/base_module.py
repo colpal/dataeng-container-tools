@@ -71,17 +71,7 @@ class BaseModule(metaclass=ModuleRegistryMeta):
 
     def __init__(self) -> None:
         """Initialize the base module."""
-        self.client: object = None
-
-    def get_client(self) -> ...:
-        """Get the client instance for this module.
-
-        Returns:
-            The client instance used to interact with external services.
-            Returns None if no client has been initialized.
-
-        """
-        return self.client
+        self.client = ...
 
     def to_dict(self) -> dict[str, Any]:
         """Convert module configuration to a dictionary.

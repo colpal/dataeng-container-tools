@@ -10,7 +10,7 @@ from .cla import (
     CustomCommandLineArgument,
 )
 from .log_utils import configure_logger
-from .modules import DS, GCSFileIO
+from .modules import DS, GCSFileIO, Snowflake
 from .safe_textio import SafeTextIO, setup_default_stdio
 from .secrets_manager import SecretLocations, SecretManager
 
@@ -23,6 +23,7 @@ __all__ = [
     "SafeTextIO",
     "SecretLocations",
     "SecretManager",
+    "Snowflake",
     "configure_logger",
     "setup_default_stdio",
 ]

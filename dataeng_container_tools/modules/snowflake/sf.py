@@ -34,7 +34,9 @@ class Snowflake(BaseModule):
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
-    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"SF": "/vault/secrets/sf_creds.json"}
+    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {
+        "SF": "/vault/secrets/sf_creds.json"
+    }
 
     def __init__(
         self,
@@ -67,23 +69,44 @@ class Snowflake(BaseModule):
             raise TypeError(msg)
 
         self.user = sf_creds["username"]
-        self.private_key = sf_creds["rsa_private_key"]
+        self.authenticator = "SNOWFLAKE_JWT"
         self.account = account
         self.warehouse = warehouse
         self.database = database
         self.schema = schema
         self.role = role
         self.query_tag = query_tag
-
-        self.ctx: SnowflakeConnection = sc.connect(
-            user=self.user,
-            private_key=self.private_key,
-            account=account,
-            warehouse=warehouse,
-            database=database,
-            schema=schema,
-            role=role,
-        )
+        try:
+            self.password = sf_creds["password"]
+            self.ctx: SnowflakeConnection = sc.connect(
+                user=self.user,
+                password=self.password,
+                authenticator=self.authenticator,
+                account=account,
+                warehouse=warehouse,
+                database=database,
+                schema=schema,
+                role=role,
+            )
+            logger.info("Connected to Snowflake successfully with username/password!")
+        except Exception as e:
+            logger.info(f"Username/Password authentication failed: {e}")
+            logger.info("Attempting key pair authentication...")
+            try:
+                self.private_key = sf_creds["rsa_private_key"]
+                self.ctx: SnowflakeConnection = sc.connect(
+                    user=self.user,
+                    private_key=self.private_key,
+                    authenticator=self.authenticator,
+                    account=account,
+                    warehouse=warehouse,
+                    database=database,
+                    schema=schema,
+                    role=role,
+                )
+                logger.info("Connected to Snowflake successfully with key pair!")
+            except Exception as e2:
+                logger.info(f"Key pair authentication failed: {e2}")
 
     def execute(self, query: str) -> list[tuple] | list[dict]:
         """Executes a query and returns the results."""

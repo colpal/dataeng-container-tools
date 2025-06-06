@@ -8,9 +8,12 @@ Example use case:
 from __future__ import annotations
 
 import logging
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
+
+if TYPE_CHECKING:
+    from snowflake.connector.connection import SnowflakeConnection
 
 logger = logging.getLogger("Container Tools")
 
@@ -49,7 +52,7 @@ class Snowflake(BaseModule):
         """Initialize a snowflake connection."""
         import snowflake.connector as sc
 
-        sf_creds: str | dict[str, str] | None = BaseModuleUtilities.parse_secret_with_fallback(
+        sf_creds = BaseModuleUtilities.parse_secret_with_fallback(
             sf_secret_location,
             self.MODULE_NAME if use_cla_fallback else None,
             self.DEFAULT_SECRET_PATHS[self.MODULE_NAME] if use_file_fallback else None,
@@ -72,7 +75,7 @@ class Snowflake(BaseModule):
         self.role = role
         self.query_tag = query_tag
 
-        self.ctx = sc.connect(
+        self.ctx: SnowflakeConnection = sc.connect(
             user=self.user,
             private_key=self.private_key,
             account=account,

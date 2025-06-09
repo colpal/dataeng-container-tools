@@ -72,7 +72,7 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["complete"] = "complete",
+        output: Literal["complete"],
     ) -> None: ...
 
     @staticmethod
@@ -86,7 +86,7 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["file_path"] = "file_path",
+        output: Literal["file_path"],
     ) -> Generator[tuple[str, Path]]: ...
 
     @staticmethod
@@ -100,9 +100,10 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["future"] = "future",
+        output: Literal["future"],
     ) -> Generator[Future[tuple[str, Path]]]: ...
 
+    # Default overload when output is not specified
     @staticmethod
     @overload
     def download(
@@ -114,8 +115,8 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["executor"] = "executor",
-    ) -> tuple[Future[tuple[str, Path]], Executor]: ...
+        output: Literal["complete"] = "complete",
+    ) -> None: ...
 
     @staticmethod
     def download(  # noqa: D417
@@ -151,7 +152,6 @@ class Download(BaseModule):
                 - "complete": Waits for all downloads and returns None.
                 - "file_path": Yields (URL, Path) tuples as downloads complete.
                 - "future": Yields Future objects for each download.
-                - "executor": Returns a tuple of (list of Futures, Executor).
 
         Returns:
             None | Generator[tuple[str, Path]] | Generator[Future[tuple[str, Path]]] | \\
@@ -163,7 +163,8 @@ class Download(BaseModule):
 
         Raises:
             Catches and logs exceptions during download when `output` is "complete" or "file_path".
-            For "future" and "executor", exceptions are raised when `future.result()` is called.
+            For "future", exceptions are raised when `future.result()` is called.
+            NotImplementedError if an output is not valid
         """
         result = Download.download_to_file(urls_to_files, **kwargs)
         if isinstance(result, Generator):
@@ -261,4 +262,5 @@ class Download(BaseModule):
                     logger.exception("Error downloading %s", url)
             executor.shutdown(wait=True)
 
-        return futures_urls.keys(), executor
+        msg = f"Output specified '{output}' has not been implemented"
+        raise NotImplementedError(msg)

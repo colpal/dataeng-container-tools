@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("Container Tools")
 
 
-class DS(BaseModule):
+class Datastore(BaseModule):
     """Handles all Google Cloud Datastore operations.
 
     This class provides methods for interacting with Google Cloud Datastore,

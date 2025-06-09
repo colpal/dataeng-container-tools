@@ -38,6 +38,7 @@ class Snowflake(BaseModule):
         "SF": "/vault/secrets/sf_creds.json"
     }
 
+    # where the connection to snowflake is made
     def __init__(
         self,
         role: str,
@@ -108,6 +109,7 @@ class Snowflake(BaseModule):
             except Exception as e2:
                 logger.info(f"Key pair authentication failed: {e2}")
 
+    # sql query is executed and then the connection is closed
     def execute(self, query: str) -> list[tuple] | list[dict]:
         """Executes a query and returns the results."""
         cursor = self.ctx.cursor()

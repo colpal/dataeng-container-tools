@@ -8,8 +8,12 @@ build
 dist
 *.egg-info/
 
-# Pytest
+# Pytest/Coverage
+.pytest_cache
 .coverage*
+coverage.*
+*.cover
+htmlcov
 
 # macOS generated files
 .DS_Store
@@ -30,3 +34,4 @@ dist
 # Other
 .ruff_cache
 uv.lock
+.mypy_cache

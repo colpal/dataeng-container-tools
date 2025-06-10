@@ -40,19 +40,21 @@ class GCSUriUtils:
     PREFIX: Final = "gs://"
 
     @staticmethod
-    def resolve_uri(gcs_uri: str) -> str:
-        """Resolves a GCS URI to its absolute path.
+    def normalize_uri(gcs_uri: str) -> str:
+        """Normalizes a GCS URI by removing redundant slashes and resolving relative segments.
 
-        Removes the "gs://" prefix, resolves the path, and re-adds the prefix.
+        Removes the "gs://" prefix, normalizes the path, and re-adds the prefix.
 
         Args:
-            gcs_uri (str): The GCS URI string to resolve.
+            gcs_uri (str): The GCS URI string to normalize.
 
         Returns:
-            str: The resolved GCS URI string.
+            str: The normalized GCS URI string.
         """
+        import posixpath
+
         gcs_uri = gcs_uri.removeprefix(GCSUriUtils.PREFIX)
-        return GCSUriUtils.PREFIX + Path(gcs_uri.lstrip(GCSUriUtils.PREFIX)).resolve().as_posix()
+        return GCSUriUtils.PREFIX + posixpath.normpath(gcs_uri)
 
     @staticmethod
     def get_components(gcs_uri: str) -> tuple[str, str]:
@@ -94,7 +96,7 @@ class GCSFileIO(BaseModule):
     MODULE_NAME: ClassVar[str] = "GCS"
     DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"GCS": "/vault/secrets/gcp-sa-storage.json"}
 
-    KNOWN_EXTENSIONS: Final = {".parquet", ".csv", ".pkl", ".xlsx", ".json"}
+    KNOWN_EXTENSIONS: Final = {".parquet", ".csv", ".xlsx", ".json"}
 
     def __init__(
         self,
@@ -253,13 +255,14 @@ class GCSFileIO(BaseModule):
                 )
                 raise ValueError(msg)
 
-            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
+            bucket_name, file_path = GCSUriUtils.get_components(gcs_uri)
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
             if blob.exists():
                 blob.download_to_filename(str(local_file_path))
             else:
                 msg = f"Blob {file_path} does not exist in bucket {bucket_name}"
+                # In the future also raise 'google.cloud.exceptions.NotFound' in an ExceptionGroup (Python 3.11)
                 raise FileNotFoundError(msg)
 
     def download_to_object(
@@ -297,8 +300,9 @@ class GCSFileIO(BaseModule):
 
         data_dict = {}
         for blob in (blob for uri in gcs_uris for blob in self.uri_to_blobs(uri)):
-            if not blob.exists():
+            if not blob.exists():  # Likely won't happen due to uri_to_blobs handling
                 msg = f"Blob {blob.name} does not exist in bucket {blob.bucket.name}"
+                # In the future also raise 'google.cloud.exceptions.NotFound' in an ExceptionGroup (Python 3.11)
                 raise FileNotFoundError(msg)
 
             data = io.BytesIO(blob.download_as_bytes())
@@ -312,15 +316,20 @@ class GCSFileIO(BaseModule):
                     file_obj = file_obj.astype(dtype)
 
             elif file_extension == "csv":
-                kwargs.setdefault("encoding", "utf-8")
-                file_obj = pd.read_csv(data, dtype=dtype, **kwargs) if dtype else pd.read_csv(data, **kwargs)
+                csv_kwargs = kwargs.copy()
+                csv_kwargs.setdefault("encoding", "utf-8")
+                file_obj = pd.read_csv(data, dtype=dtype, **csv_kwargs) if dtype else pd.read_csv(data, **csv_kwargs)
 
             elif file_extension == "xlsx":
-                kwargs.setdefault("engine", "openpyxl")
-                file_obj = pd.read_excel(data, dtype=dtype, **kwargs) if dtype else pd.read_excel(data, **kwargs)
+                xlsx_kwargs = kwargs.copy()
+                xlsx_kwargs.setdefault("engine", "openpyxl")
+                file_obj = (
+                    pd.read_excel(data, dtype=dtype, **xlsx_kwargs) if dtype else pd.read_excel(data, **xlsx_kwargs)
+                )
 
             elif file_extension == "json":
-                file_obj = pd.read_json(data, lines=True, **kwargs)
+                json_kwargs = kwargs.copy()
+                file_obj = pd.read_json(data, **json_kwargs)
 
             else:
                 file_obj = data
@@ -380,16 +389,26 @@ class GCSFileIO(BaseModule):
             TypeError: If `src_dst` is not a supported type.
             ValueError: If uploading an object and no compatible file extension is found in the `gcs_uri`.
         """
-        first_item = next(iter(src_dst), None)
-        if not first_item:
+        if not src_dst:
             return  # Empty input
 
-        source, _ = first_item
-        if isinstance(source, (str, Path)):  # File upload
-            src_dst = cast("Sequence[tuple[str | Path, str]]", src_dst)
-            self.upload_file(src_dst=src_dst, metadata=metadata, **kwargs)
-        else:  # Assume object upload
-            self.upload_object(src_dst=src_dst, metadata=metadata, **kwargs)
+        # Separate file and object uploads for mixed-type support
+        file_uploads = []
+        object_uploads = []
+
+        for source, gcs_uri in src_dst:
+            if isinstance(source, (str, Path)):
+                file_uploads.append((source, gcs_uri))
+            else:
+                object_uploads.append((source, gcs_uri))
+
+        # Upload files if any
+        if file_uploads:
+            self.upload_file(src_dst=file_uploads, metadata=metadata)
+
+        # Upload objects if any
+        if object_uploads:
+            self.upload_object(src_dst=object_uploads, metadata=metadata, **kwargs)
 
     def upload_file(
         self,
@@ -415,7 +434,7 @@ class GCSFileIO(BaseModule):
                 metadata.setdefault(var, os.environ[var])
 
         for file, gcs_uri in src_dst:
-            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
+            bucket_name, file_path = GCSUriUtils.get_components(gcs_uri)
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
             blob.metadata = metadata
@@ -458,7 +477,7 @@ class GCSFileIO(BaseModule):
                 metadata.setdefault(var, os.environ[var])
 
         for object_to_upload, gcs_uri in src_dst:
-            bucket_name, file_path = GCSUriUtils.get_components(str(gcs_uri))
+            bucket_name, file_path = GCSUriUtils.get_components(gcs_uri)
             bucket = self.client.bucket(bucket_name)
             blob = bucket.blob(file_path)
             blob.metadata = metadata
@@ -468,19 +487,24 @@ class GCSFileIO(BaseModule):
 
             # Handle based on file type
             if file_extension == "parquet" and isinstance(object_to_upload, pd.DataFrame):
+                parquet_kwargs = kwargs.copy()
                 file_obj = io.BytesIO()
-                object_to_upload.to_parquet(file_obj, **kwargs)
+                object_to_upload.to_parquet(file_obj, **parquet_kwargs)
                 file_obj.seek(0)
                 blob.upload_from_file(file_obj)
 
             elif file_extension == "csv" and isinstance(object_to_upload, pd.DataFrame):
-                kwargs.setdefault("encoding", "utf-8")
-                csv_string = object_to_upload.to_csv(**kwargs)
+                csv_kwargs = kwargs.copy()
+                csv_kwargs.setdefault("encoding", "utf-8")
+                csv_kwargs.setdefault("index", False)
+                csv_string = object_to_upload.to_csv(**csv_kwargs)
                 blob.upload_from_string(csv_string)
 
             elif file_extension == "xlsx" and isinstance(object_to_upload, pd.DataFrame):
+                xlsx_kwargs = kwargs.copy()
+                xlsx_kwargs.setdefault("index", False)
                 file_obj = io.BytesIO()
-                object_to_upload.to_excel(file_obj, **kwargs)
+                object_to_upload.to_excel(file_obj, **xlsx_kwargs)
                 file_obj.seek(0)
                 blob.upload_from_file(file_obj)
 

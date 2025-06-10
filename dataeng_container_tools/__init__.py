@@ -10,23 +10,21 @@ from .cla import (
     CustomCommandLineArgument,
 )
 from .log_utils import configure_logger
-from .modules import DS, Download, GCSFileIO, Snowflake
+from .modules import Datastore, Download, GCSFileIO, Snowflake
 from .safe_textio import SafeTextIO, setup_default_stdio
 from .secrets_manager import SecretLocations, SecretManager
 
 __all__ = [
-    "DS",
     "CommandLineArgumentType",
     "CommandLineArguments",
     "CustomCommandLineArgument",
+    "Datastore",
     "Download",
     "GCSFileIO",
     "SafeTextIO",
     "SecretLocations",
     "SecretManager",
     "Snowflake",
-    "configure_logger",
-    "setup_default_stdio",
 ]
 
 # Set up the logger

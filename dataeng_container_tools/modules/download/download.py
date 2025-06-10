@@ -10,14 +10,16 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Generator, Mapping
-from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, ClassVar, Final, Literal, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, overload
 
 import requests
 
 from dataeng_container_tools.modules import BaseModule
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Mapping
 
 logger = logging.getLogger("Container Tools")
 
@@ -122,7 +124,7 @@ class Download(BaseModule):
     def download(  # noqa: D417
         urls_to_files: Mapping[str, str | Path],
         **kwargs: Any,
-    ) -> None | Generator | tuple:
+    ) -> None | Generator:
         r"""Downloads files from a mapping of URLs to local file paths.
 
         This is the primary user-facing download function. It offers multiple modes of
@@ -166,10 +168,7 @@ class Download(BaseModule):
             For "future", exceptions are raised when `future.result()` is called.
             NotImplementedError if an output is not valid
         """
-        result = Download.download_to_file(urls_to_files, **kwargs)
-        if isinstance(result, Generator):
-            yield from result
-        return result
+        return Download.download_to_file(urls_to_files, **kwargs)
 
     @staticmethod
     def download_to_file(
@@ -181,12 +180,11 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["complete", "file_path", "future", "executor"] = "complete",
+        output: Literal["complete", "file_path", "future"] = "complete",
     ) -> (
         None  # Complete
         | Generator[tuple[str, Path]]  # File paths
         | Generator[Future[tuple[str, Path]]]  # Future
-        | tuple[list[Future[tuple[str, Path]]], Executor]  # Executor (w/Futures)
     ):
         r"""Core implementation for downloading content from URLs using an executor.
 
@@ -222,45 +220,43 @@ class Download(BaseModule):
             headers = {}
 
         executor_class = ThreadPoolExecutor if mode == "thread" else ProcessPoolExecutor
-        executor = executor_class(max_workers=max_workers)
 
-        futures_urls = {
-            executor.submit(
-                Download._get_to_file,
-                url,
-                Path(file_path),
-                headers,
-                timeout,
-                chunk_size,
-                decode_content=decode_content,
-            ): url
-            for url, file_path in urls_to_files.items()
-        }
+        with executor_class(max_workers=max_workers) as executor:
+            futures_urls = {
+                executor.submit(
+                    Download._get_to_file,
+                    url,
+                    Path(file_path),
+                    headers,
+                    timeout,
+                    chunk_size,
+                    decode_content=decode_content,
+                ): url
+                for url, file_path in urls_to_files.items()
+            }
 
-        if output == "complete":
-            for future in as_completed(futures_urls):
-                url = futures_urls[future]
-                try:
-                    future.result()
-                except Exception:
-                    logger.exception("Error downloading %s", url)
-            executor.shutdown(wait=True)
-            return None
+            if output == "complete":
+                for future in as_completed(futures_urls):
+                    url = futures_urls[future]
+                    try:
+                        future.result()
+                    except Exception:
+                        logger.exception("Error downloading %s", url)
+                return None
 
-        elif output == "future":
-            for future in as_completed(futures_urls):
-                yield future
-            executor.shutdown(wait=True)
+            if output == "file_path":
+                def file_path_generator() -> Generator:
+                    for future in as_completed(futures_urls):
+                        url = futures_urls[future]
+                        try:
+                            url, file_path = future.result()
+                            yield url, file_path
+                        except Exception:
+                            logger.exception("Error downloading %s", url)
+                return file_path_generator()
 
-        elif output == "file_path":
-            for future in as_completed(futures_urls):
-                url = futures_urls[future]
-                try:
-                    url, file_path = future.result()
-                    yield url, file_path
-                except Exception:
-                    logger.exception("Error downloading %s", url)
-            executor.shutdown(wait=True)
+            if output == "future":
+                return (future for future in as_completed(futures_urls))
 
-        msg = f"Output specified '{output}' has not been implemented"
-        raise NotImplementedError(msg)
+            msg = f"Output specified '{output}' has not been implemented"
+            raise NotImplementedError(msg)

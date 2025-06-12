@@ -9,12 +9,14 @@ from .cla import (
     CommandLineArgumentType,
     CustomCommandLineArgument,
 )
+from .container_utils import IS_LOCAL
 from .log_utils import configure_logger
 from .modules import Datastore, Download, GCSFileIO, Snowflake
 from .safe_textio import SafeTextIO
 from .secrets_manager import SecretLocations, SecretManager
 
 __all__ = [
+    "IS_LOCAL",
     "CommandLineArgumentType",
     "CommandLineArguments",
     "CustomCommandLineArgument",

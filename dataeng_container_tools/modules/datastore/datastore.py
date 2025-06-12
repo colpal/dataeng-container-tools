@@ -34,7 +34,7 @@ class Datastore(BaseModule):
         client: The Datastore client instance.
 
     Examples:
-        ds = DS("task_kind", ds_secret_location="/path/to/credentials.json")
+        ds = DataStore("task_kind", ds_secret_location="/path/to/credentials.json")
         client = ds.client
         ds.handle_task(client, {
             "dag_id": "my_dag",

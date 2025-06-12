@@ -96,7 +96,7 @@ class BaseModule(metaclass=ModuleRegistryMeta):
         Subclasses should call `super().__init__()` and then perform their
         specific client initialization and other setup tasks.
         """
-        self.client: Any = ... # Placeholder for the client object
+        self.client: Any = ...  # Placeholder for the client object
 
     def to_dict(self) -> dict[str, Any]:
         """Converts module configuration to a dictionary.

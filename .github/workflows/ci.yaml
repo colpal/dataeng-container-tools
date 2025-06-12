@@ -1,0 +1,31 @@
+# Inspired by uv (MIT License)
+# https://github.com/astral-sh/uv/blob/f5382c010b24471a6dd6e1ed2fed7c521cf6b87f/.github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    timeout-minutes: 10
+    name: "lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.7.12"
+          python-version: "3.9"
+          activate-environment: true
+          enable-cache: false
+
+      - name: "Ruff format"
+        run: uvx ruff@0.11.8 format --diff .
+
+      - name: "Ruff lint"
+        run: uvx ruff@0.11.8 check .

@@ -5,6 +5,7 @@ Supports multithreading/multiproccessing.
 Functions:
     log_memory_usage: Log the current memory usage of the process.
 """
+
 from __future__ import annotations
 
 import json

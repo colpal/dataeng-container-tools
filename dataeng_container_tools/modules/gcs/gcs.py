@@ -1,16 +1,6 @@
-"""Tools for working with GCP.
+"""Tools for working with Google Cloud Storage (GCS).
 
-Deals with receiving downloading and uploading files from/to GCP. Has one
-class: `gcs_file_io`.
-
-Typical usage example:
-
-    file_io = gcs_file_io(gcs_secret_location = secret_locations[0])
-    pqt_obj = file_io.download_file_to_object(input_uris[0])
-    #
-    # Edit the object in some way here.
-    #
-    result = file_io.upload_file_from_object(gcs_uri=output_uris[0], object_to_upload=pqt_obj)
+Deals with receiving downloading and uploading files from/to GCP.
 """
 
 from __future__ import annotations
@@ -46,10 +36,10 @@ class GCSUriUtils:
         Removes the "gs://" prefix, normalizes the path, and re-adds the prefix.
 
         Args:
-            gcs_uri (str): The GCS URI string to normalize.
+            gcs_uri: The GCS URI string to normalize.
 
         Returns:
-            str: The normalized GCS URI string.
+            The normalized GCS URI string.
         """
         import posixpath
 
@@ -61,10 +51,10 @@ class GCSUriUtils:
         """Extracts the bucket name and file path from a GCS URI.
 
         Args:
-            gcs_uri (str): The GCS URI string.
+            gcs_uri: The GCS URI string.
 
         Returns:
-            tuple[str, str]: A tuple containing the bucket name and the file path.
+            A tuple containing the bucket name and the file path.
 
         Raises:
             ValueError: If the URI does not start with the GCS prefix 'gs://'.
@@ -88,9 +78,27 @@ class GCSFileIO(BaseModule):
     common GCS operations.
 
     Attributes:
-        client (storage.Client): The Google Cloud Storage client instance.
+        client (google.cloud.storage.Client): The Google Cloud Storage client instance.
         local (bool): A boolean indicating if the module is in local-only mode.
-               If True, no actual GCS operations are performed.
+            If True, no actual GCS operations are performed.
+
+    Examples:
+        Initialize GCSFileIO and download a file to a local path:
+            >>> gcs_io = GCSFileIO(gcs_secret_location="/path/to/your/gcp-sa-storage.json")
+            >>> gcs_io.download(src_dst=[("gs://my-bucket/remote_file.txt", "local_file.txt")])
+
+        Download a Parquet file to a Pandas DataFrame:
+            >>> gcs_io = GCSFileIO(local=True) # Example for local mode
+            >>> dataframes = gcs_io.download(src_dst="gs://my-bucket/data.parquet")
+            >>> df = dataframes["data.parquet"]
+
+        Upload a local file to GCS:
+            >>> gcs_io.upload(src_dst=[("local_file_to_upload.txt", "gs://my-bucket/uploaded_file.txt")])
+
+        Upload a Pandas DataFrame to GCS as a CSV:
+            >>> import pandas as pd
+            >>> df_to_upload = pd.DataFrame({"col1": [1, 2], "col2": ["a", "b"]})
+            >>> gcs_io.upload(src_dst=[(df_to_upload, "gs://my-bucket/uploaded_dataframe.csv")])
     """
 
     MODULE_NAME: ClassVar[str] = "GCS"
@@ -109,13 +117,14 @@ class GCSFileIO(BaseModule):
         """Initializes GCSFileIO with desired configuration.
 
         Args:
-            gcs_secret_location (str | Path | None): Path to the GCS service account JSON key file.
-            local (bool): If True, operates in local mode without GCS interaction. Should be used
-                with a GCS local emulator.
-            use_cla_fallback (bool): If True, attempts to use command-line arguments
+            gcs_secret_location: Path to the GCS service account JSON key file.
+            local: If True, operates in local mode without GCS interaction. Should be used
+                with a GCS local emulator. Defaults to False.
+            use_cla_fallback: If True, attempts to use command-line arguments
                 as a fallback for secret location if `gcs_secret_location` is not found.
-            use_file_fallback (bool): If True, attempts to use the default secret file path
-                as a fallback if other sources fail.
+                Defaults to True.
+            use_file_fallback: If True, attempts to use the default secret file path
+                as a fallback if other sources fail. Defaults to True.
 
         Raises:
             FileNotFoundError: If GCS credentials are not found and not in local mode.
@@ -149,11 +158,11 @@ class GCSFileIO(BaseModule):
         for more information on glob matching.
 
         Args:
-            gcs_uri (str): The GCS URI, which can include glob patterns.
+            gcs_uri: The GCS URI, which can include glob patterns.
 
         Returns:
-            Iterator[Blob]: An iterator yielding `google.cloud.storage.blob.Blob` objects
-            matching the URI.
+            An iterator yielding `google.cloud.storage.blob.Blob`
+            objects matching the URI.
         """
         bucket_name, file_path = GCSUriUtils.get_components(gcs_uri)
         bucket = self.client.bucket(bucket_name)
@@ -184,8 +193,9 @@ class GCSFileIO(BaseModule):
     ) -> ...:
         """Downloads files from GCS to local file paths or Python objects.
 
-        This method dispatches to `download_to_file` if `src_dst` is a sequence of tuples,
-        or to `download_to_object` otherwise.
+        This method dispatches to `download_to_file` if `src_dst` is a sequence of tuples
+        (for downloading to local files), or to `download_to_object` if `src_dst` is
+        a string or list of strings (for downloading to Python objects).
 
         When downloading to objects:
             - Supports various file types like Parquet, CSV, XLSX, and JSON.
@@ -194,26 +204,52 @@ class GCSFileIO(BaseModule):
             - For XLSX files, keyword arguments like `header` can be passed via `**kwargs`.
 
         Args:
-            src_dst (Sequence[tuple[str, str | Path]] | str | list[str]):
-                Sequence of tuples of (GCS URI, local file path) for file download,
-                or a single GCS URI or list of GCS URIs for object download.
-            dtype (dict | None, optional): Optional dictionary specifying data types for columns,
-                primarily for Pandas DataFrames when downloading to objects (e.g., when reading CSV or Parquet).
-                If provided (via `**kwargs`). Defaults to None.
-            **kwargs (Any): Additional keyword arguments. These are passed to the underlying file
-                reading functions (e.g., `pd.read_parquet`, `pd.read_csv`) when downloading to objects.
+            src_dst:
+                - For downloading to local files: A sequence of tuples, where each tuple is
+                  (GCS URI, local file path). Example: `[("gs://bucket/file.txt", "local.txt")]`
+                - For downloading to Python objects: A single GCS URI (str) or a list of GCS URIs (list[str]).
+                  Example: `"gs://bucket/data.csv"` or `["gs://bucket/data1.parquet", "gs://bucket/data2.json"]`
+            **kwargs:
+                - `dtype`: Passed to `download_to_object`. Dictionary specifying
+                  data types for columns, primarily for Pandas DataFrames. Defaults to None.
+                - Other keyword arguments are passed to the underlying file reading functions
+                  (e.g., `pandas.read_parquet`, `pandas.read_csv`) when downloading to objects.
 
         Returns:
-            None | dict[str, pd.DataFrame | io.BytesIO] | pd.DataFrame | io.BytesIO:
-                - `None` if downloading to file (i.e., using tuples).
-                - If downloading to objects:
-                    - A dictionary mapping blob names to downloaded objects if multiple URIs result in multiple objects.
-                    - The type of object depends on the file extension.
+            - `None` if downloading to local files (i.e., when `src_dst` is a sequence of tuples).
+            - If downloading to Python objects (i.e., when `src_dst` is a string or list of strings):
+              A dictionary mapping blob names to downloaded objects. The type of object
+              depends on the file extension (e.g., `pd.DataFrame` for .parquet, .csv;
+              `io.BytesIO` for unrecognized types).
 
         Raises:
-            TypeError: If `src_dst` is not a supported type.
-            FileNotFoundError: If a file in a bucket does not exist.
-            Other exceptions may be raised by GCS client or Pandas during file operations.
+            TypeError: If `src_dst` is not a supported type (neither a sequence of tuples,
+                nor a string, nor a list of strings).
+            FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.
+            ValueError: If a GCS URI for `download_to_file` contains wildcards.
+            Other exceptions may be raised by the GCS client or Pandas during file operations.
+
+        Examples:
+            Download a single file to a local path:
+                >>> gcs_io.download(src_dst=[("gs://my-bucket/config.json", "my_config.json")])
+
+            Download multiple files to local paths:
+                >>> files_to_download = [
+                ...     ("gs://my-bucket/data.csv", "data/my_data.csv"),
+                ...     ("gs://my-bucket/image.png", "images/my_image.png")
+                ... ]
+                >>> gcs_io.download(src_dst=files_to_download)
+
+            Download a CSV file into a Pandas DataFrame:
+                >>> data_objects = gcs_io.download(src_dst="gs://my-bucket/report.csv", delimiter=";")
+                >>> report_df = data_objects["report.csv"]
+
+            Download multiple files (Parquet and JSON) into objects:
+                >>> object_dict = gcs_io.download(
+                ...     src_dst=["gs://my-bucket/dataset.parquet", "gs://my-bucket/metadata.json"]
+                ... )
+                >>> parquet_df = object_dict["dataset.parquet"]
+                >>> metadata_obj = object_dict["metadata.json"] # Likely an io.BytesIO object
         """
         # File download (sequence of tuples)
         if isinstance(src_dst, (list, zip)):
@@ -237,16 +273,16 @@ class GCSFileIO(BaseModule):
         """Downloads files from GCS to local file paths.
 
         Args:
-            src_dst (Sequence[tuple[str, str | Path]]):
-                Sequence of tuples of (GCS URI, local file path) where the files will be downloaded.
+            src_dst: Sequence of tuples, where each tuple is
+                (GCS URI, local file path) indicating where the files will be downloaded.
 
         Raises:
-            FileNotFoundError: If a file in a bucket does not exist.
+            FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.
             ValueError: If a GCS URI contains wildcards, which are not supported for direct file downloads.
+                Use `download_to_object()` for glob pattern matching.
         """
         for gcs_uri, local_file_path in src_dst:
             # Check for wildcards which are not supported for direct file downloads
-            # TODO: Support wildcards only if a bool/Path to download the files as is (according to GCS) is passed
             if any(wildcard in gcs_uri for wildcard in ["*", "?", "[", "]", "{", "}"]):
                 msg = (
                     f"Wildcards are not supported for direct file downloads. "
@@ -276,22 +312,25 @@ class GCSFileIO(BaseModule):
         Supports various file types like Parquet, CSV, XLSX, and JSON.
         If the file extension is not recognized, it returns an `io.BytesIO` object.
 
-        For CSV files, keyword arguments like `header`, `delimiter`, `encoding` can be passed.
-        For XLSX files, keyword arguments like `header` can be passed.
+        For CSV files, keyword arguments like `header`, `delimiter`, `encoding` can be passed via `**kwargs`.
+        For XLSX files, keyword arguments like `header` can be passed via `**kwargs`.
 
         Args:
-            gcs_uris (str | list[str]): A single GCS URI or a list of GCS URIs to download.
-            dtype (dict | None): Optional dictionary specifying data types for columns, primarily for
-                Pandas DataFrames (e.g., when reading CSV or Parquet).
-            **kwargs (Any): Additional keyword arguments passed to the underlying file reading
-                functions (e.g., `pd.read_parquet`, `pd.read_csv`).
+            gcs_uris: A single GCS URI or a list of GCS URIs to download.
+                Can include glob patterns for matching multiple files.
+            dtype: Dictionary specifying data types for columns, primarily for
+                Pandas DataFrames (e.g., when reading CSV or Parquet). Defaults to None.
+            **kwargs: Additional keyword arguments passed to the underlying file reading
+                functions (e.g., `pandas.read_parquet`, `pandas.read_csv`).
 
         Returns:
-            dict[pd.DataFrame | io.BytesIO]: A dictionary mapping blob names to the downloaded objects.
-                The type of object depends on the file extension.
+            A dictionary mapping blob names to the downloaded objects.
+            The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet,
+            .csv; `io.BytesIO` for unrecognized types or if the file is not a table format).
 
         Raises:
-            FileNotFoundError: If a file in a bucket does not exist.
+            FileNotFoundError: If a GCS blob specified by `gcs_uris` does not exist
+                (though `uri_to_blobs` usually handles this by returning an empty iterator).
         """
         import pandas as pd
 
@@ -363,31 +402,58 @@ class GCSFileIO(BaseModule):
     ) -> None:
         """Uploads local files or in-memory Python objects to GCS.
 
-        This method serves as a dispatcher for uploading either files from the
-        local filesystem or Python objects directly to GCS. You must provide
-        a sequence of (source, GCS URI) tuples.
+        This method dispatches to `upload_file` for local file uploads and
+        `upload_object` for Python object uploads. You must provide a sequence
+        of (source, GCS URI) tuples.
 
         Metadata can be provided for the uploaded objects. Environment variables
         like `DAG_ID`, `RUN_ID`, `NAMESPACE`, `POD_NAME`, `GITHUB_SHA` are
-        automatically added to the metadata if present.
+        automatically added to the metadata if present and not already specified.
 
         For object uploads, the method attempts to infer the file type from the
         GCS URI's extension (e.g., .parquet, .csv, .xlsx, .json) and uses
         appropriate serialization methods (e.g., `to_parquet` for Pandas DataFrames).
 
         Args:
-            src_dst (Sequence[tuple[str | Path, str]] | Sequence[tuple[object, str]]):
-                Sequence of tuples where each tuple contains (source, GCS URI).
-                Source can be local file paths (str or Path) or Python objects.
-                Supported object types depend on the file extension of the `gcs_uri`
-                (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json).
-            metadata (dict | None): Optional dictionary of metadata to associate with the uploaded GCS object(s).
-            **kwargs (Any): Additional keyword arguments passed to the underlying upload or serialization functions
-                (e.g., `pd.DataFrame.to_parquet`, `pd.DataFrame.to_csv`).
+            src_dst:
+                A sequence of tuples, where each tuple contains (source, GCS URI).
+                - For file uploads: `source` is a local file path (str or Path).
+                  Example: `[("local_data.csv", "gs://bucket/remote_data.csv")]`
+                - For object uploads: `source` is a Python object.
+                  Supported object types depend on the file extension of the `gcs_uri`
+                  (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json,
+                  which will be `json.dumps`ed).
+                  Example: `[(my_dataframe, "gs://bucket/df.parquet")]`
+            metadata: A dictionary of metadata to associate with the
+                uploaded GCS object(s). Defaults to None (an empty dictionary will be used).
+            **kwargs: Additional keyword arguments passed to the underlying
+                upload or serialization functions (e.g., `pandas.DataFrame.to_parquet`,
+                `pandas.DataFrame.to_csv`).
 
         Raises:
-            TypeError: If `src_dst` is not a supported type.
-            ValueError: If uploading an object and no compatible file extension is found in the `gcs_uri`.
+            ValueError: If uploading an object and no compatible file extension is found
+                in the `gcs_uri`, or if the object type is not supported for the extension.
+            Other exceptions may be raised by the GCS client or Pandas during file operations.
+
+        Examples:
+            Upload a single local file:
+                >>> gcs_io.upload(src_dst=[("path/to/my_report.pdf", "gs://my-bucket/reports/report.pdf")])
+
+            Upload multiple local files with custom metadata:
+                >>> files_to_upload = [
+                ...     ("data.csv", "gs://my-bucket/data/current_data.csv"),
+                ...     ("archive.zip", "gs://my-bucket/archives/backup.zip")
+                ... ]
+                >>> gcs_io.upload(src_dst=files_to_upload, metadata={"version": "1.2", "processed_by": "script_A"})
+
+            Upload a Pandas DataFrame as a Parquet file:
+                >>> import pandas as pd
+                >>> df = pd.DataFrame({'colA': [1, 2], 'colB': ['x', 'y']})
+                >>> gcs_io.upload(src_dst=[(df, "gs://my-bucket/dataframes/my_df.parquet")])
+
+            Upload a string as a JSON file (will be json.dumps'd):
+                >>> my_config_str = '{"key": "value", "settings": [1, 2, 3]}'
+                >>> gcs_io.upload(src_dst=[(my_config_str, "gs://my-bucket/configs/app_config.json")])
         """
         if not src_dst:
             return  # Empty input
@@ -417,13 +483,15 @@ class GCSFileIO(BaseModule):
     ) -> None:
         """Uploads local file(s) to GCS.
 
-        Metadata can be provided, and common environment variables are
-        automatically included.
+        Metadata can be provided. Common environment variables (e.g., `DAG_ID`,
+        `RUN_ID`) are automatically included in the metadata if present and not
+        already specified.
 
         Args:
-            src_dst (Sequence[tuple[str | Path, str]]):
-                Sequence of tuples containing (local file path, GCS URI) pairs to upload from the local filesystem.
-            metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
+            src_dst: Sequence of tuples, where each tuple
+                contains (local file path, GCS URI) pairs for files to upload from the local filesystem.
+            metadata: A dictionary of metadata to associate with the
+                GCS object(s). Defaults to None (an empty dictionary will be used).
         """
         metadata = metadata or {}
 
@@ -450,20 +518,23 @@ class GCSFileIO(BaseModule):
 
         The method attempts to serialize objects based on the GCS URI's file
         extension (e.g., .parquet, .csv, .xlsx, .json).
-        Metadata can be provided, and common environment variables are
-        automatically included.
+        Metadata can be provided. Common environment variables (e.g., `DAG_ID`,
+        `RUN_ID`) are automatically included in the metadata if present and not
+        already specified.
 
         Args:
-            src_dst (Sequence[tuple[object, str]]):
-                Sequence of tuples containing (Python object, GCS URI) pairs to upload. Supported types include
-                `pd.DataFrame` (for .parquet, .csv, .xlsx) and `str` (for .json).
-            metadata (dict | None): Optional dictionary of metadata for the GCS object(s).
-            **kwargs (Any): Additional keyword arguments passed to the serialization
-                functions (e.g., `to_parquet`, `to_csv`).
+            src_dst: Sequence of tuples, where each tuple
+                contains (Python object, GCS URI) pairs to upload. Supported object types include:
+                - `pandas.DataFrame` (for .parquet, .csv, .xlsx extensions in GCS URI)
+                - `str` (for .json extension in GCS URI; the string will be `json.dumps`'d)
+            metadata: A dictionary of metadata to associate with the
+                GCS object(s). Defaults to None (an empty dictionary will be used).
+            **kwargs: Additional keyword arguments passed to the serialization
+                functions (e.g., `pandas.DataFrame.to_parquet`, `pandas.DataFrame.to_csv`).
 
         Raises:
             ValueError: If no compatible file extension is found in the `gcs_uri`
-                for serializing the object.
+                for serializing the object, or if the object type is not supported for that extension.
         """
         import pandas as pd
 

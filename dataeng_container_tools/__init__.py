@@ -11,7 +11,7 @@ from .cla import (
 )
 from .log_utils import configure_logger
 from .modules import Datastore, Download, GCSFileIO, Snowflake
-from .safe_textio import SafeTextIO, setup_default_stdio
+from .safe_textio import SafeTextIO
 from .secrets_manager import SecretLocations, SecretManager
 
 __all__ = [
@@ -30,6 +30,5 @@ __all__ = [
 # Set up the logger
 logger = configure_logger("Container Tools")
 
-# Initialize secrets and stdout/stderr bad words output
-setup_default_stdio()
+# Initialize secrets
 SecretManager.process_secret_folder()

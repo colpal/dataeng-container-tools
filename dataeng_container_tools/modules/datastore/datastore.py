@@ -3,16 +3,6 @@
 This module handles all Datastore operations for storing and retrieving task entries.
 It provides functionality to manage task entries in Datastore with features like
 filtering, ordering, and updating task information.
-
-Typical usage example:
-
-    ds = DS("task_kind", ds_secret_location="/path/to/credentials.json")
-    client = ds.client
-    ds.handle_task(client, {
-        "dag_id": "my_dag",
-        "run_id": "run_123",
-        "airflow_task_id": "my_task"
-    })
 """
 
 from __future__ import annotations
@@ -40,10 +30,17 @@ class Datastore(BaseModule):
     including querying, creating, and updating task entries.
 
     Attributes:
-        MODULE_NAME: Identifies the module type for logging and display.
-        DEFAULT_SECRET_PATHS: Default secret file paths for Datastore credentials.
         current_task_kind: The kind of task entries this instance will handle.
         client: The Datastore client instance.
+
+    Examples:
+        ds = DS("task_kind", ds_secret_location="/path/to/credentials.json")
+        client = ds.client
+        ds.handle_task(client, {
+            "dag_id": "my_dag",
+            "run_id": "run_123",
+            "airflow_task_id": "my_task"
+        })
     """
 
     MODULE_NAME: ClassVar[str] = "DS"
@@ -63,9 +60,9 @@ class Datastore(BaseModule):
             task_kind: The kind of task entries this instance will handle.
             gcp_secret_location: The location of the secret file
                 associated with Datastore.
-            use_cla_fallback (bool): If True, attempts to use command-line arguments
+            use_cla_fallback: If True, attempts to use command-line arguments
                 as a fallback source for secrets when the primary source fails.
-            use_file_fallback (bool): If True, attempts to use the default secret file
+            use_file_fallback: If True, attempts to use the default secret file
                 as a fallback source when both primary and command-line sources fail.
         """
         from google.cloud import datastore

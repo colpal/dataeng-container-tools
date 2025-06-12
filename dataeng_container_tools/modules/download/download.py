@@ -28,8 +28,8 @@ class Download(BaseModule):
     """A module for downloading files over HTTP/HTTPS.
 
     Provides functionality to download multiple files concurrently using
-    either threads or processes, with options for customizing request headers,
-    timeouts, chunk sizes, and the number of workers.
+    either threads or processes. It allows customization of request headers,
+    timeouts, chunk sizes for streaming, and the number of concurrent workers.
     """
 
     MODULE_NAME: ClassVar[str] = "DL"
@@ -53,6 +53,32 @@ class Download(BaseModule):
         *,
         decode_content: bool = True,
     ) -> tuple[str, Path]:
+        """Downloads a single file from a URL to a local path.
+
+        This is an internal helper method used by the main download functions.
+        It handles the actual HTTP GET request and streams the response content
+        to a local file.
+
+        Args:
+            url: The URL of the file to download.
+            local_file_path: The local path where the file will be saved.
+            headers: HTTP headers to include in the request.
+            timeout: Request timeout in seconds. Defaults to DEFAULT_TIMEOUT.
+            chunk_size: Size of download chunks in bytes for streaming.
+                Defaults to DEFAULT_CHUNK_SIZE.
+            decode_content: Whether to decode content based on response headers.
+                Defaults to True.
+
+        Returns:
+            A tuple containing the original URL and the local Path
+            object of the downloaded file.
+
+        Raises:
+            requests.exceptions.HTTPError: If the HTTP request returned an unsuccessful
+                status code.
+            requests.exceptions.RequestException: For other request-related errors
+                (e.g., connection issues, timeouts).
+        """
         with requests.Session() as session, session.get(url, headers=headers, timeout=timeout, stream=True) as response:
             response.raise_for_status()
             with local_file_path.open("wb") as f:
@@ -121,7 +147,7 @@ class Download(BaseModule):
     ) -> None: ...
 
     @staticmethod
-    def download(  # noqa: D417
+    def download(
         urls_to_files: Mapping[str, str | Path],
         **kwargs: Any,
     ) -> None | Generator:
@@ -132,41 +158,68 @@ class Download(BaseModule):
         - Wait for all downloads to complete (`output="complete"`).
         - Receive a generator yielding (URL, Path) tuples as files are downloaded (`output="file_path"`).
         - Receive a generator yielding Future objects for each download task (`output="future"`).
-        - Receive a tuple containing a list of Future objects and the executor instance (`output="executor"`).
 
         Args:
-            urls_to_files (Mapping[str, str | Path]): A mapping where keys are URLs (str)
+            urls_to_files: A mapping where keys are URLs (str)
                 and values are local file paths (str or Path) where the content will be saved.
-            headers (dict[str, str] | None): HTTP headers to include in the request.
-                Defaults to None.
-            max_workers (int): Maximum number of worker threads or processes.
-                Defaults to DEFAULT_MAX_WORKERS.
-            chunk_size (int): Size of download chunks in bytes.
-                Defaults to DEFAULT_CHUNK_SIZE.
-            timeout (int): Request timeout in seconds.
-                Defaults to DEFAULT_TIMEOUT.
-            decode_content (bool): Whether to decode content based on response headers.
-                Defaults to True.
-            mode (Literal["thread", "process"]): Executor type, "thread" or "process".
-                Defaults to "thread".
-            output (Literal["complete", "file_path", "future", "executor"]):
-                Specifies the return type. Defaults to "complete".
-                - "complete": Waits for all downloads and returns None.
-                - "file_path": Yields (URL, Path) tuples as downloads complete.
-                - "future": Yields Future objects for each download.
+            **kwargs: Additional keyword arguments that are passed to `download_to_file`.
+                See `download_to_file` for more details on available options such as:
+                - `headers`: HTTP headers.
+                - `max_workers`: Maximum number of workers.
+                - `chunk_size`: Chunk size for streaming.
+                - `timeout`: Request timeout.
+                - `decode_content`: Whether to decode content.
+                - mode: Specifies the type of executor to use.
+                    "thread" for `ThreadPoolExecutor`, "process" for `ProcessPoolExecutor`.
+                    Defaults to "thread".
+                - output: Determines the return behavior. Defaults to "complete".
+                    "complete": Waits for all downloads to finish and returns None.
+                    "file_path": Returns a generator that yields `(url, Path)` tuples
+                    as each download completes.
+                    "future": Returns a generator that yields `Future` objects for
+                    each submitted download task.
 
         Returns:
-            None | Generator[tuple[str, Path]] | Generator[Future[tuple[str, Path]]] | \\
-            tuple[list[Future[tuple[str, Path]]], Executor]:
-            - None if `output` is "complete".
-            - A generator of `(str, Path)` tuples if `output` is "file_path".
-            - A generator of `Future[tuple[str, Path]]` objects if `output` is "future".
-            - A tuple `(list[Future[tuple[str, Path]]], Executor)` if `output` is "executor".
+            The return type depends on the `output` keyword argument:
+                - `None`: If `output` is "complete" (default).
+                - `Generator[tuple[str, Path]]`: If `output` is "file_path".
+                - `Generator[Future[tuple[str, Path]]]`: If `output` is "future".
 
         Raises:
-            Catches and logs exceptions during download when `output` is "complete" or "file_path".
-            For "future", exceptions are raised when `future.result()` is called.
-            NotImplementedError if an output is not valid
+            NotImplementedError: If an invalid `output` mode is specified.
+            Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
+            raised during the download process, especially when `output="future"`
+            and `future.result()` is called. For "complete" and "file_path" modes,
+            exceptions are caught and logged.
+
+        Examples:
+            Download a single file and wait for completion:
+                >>> urls = {"http://example.com/file1.txt": "local_file1.txt"}
+                >>> Download.download(urls) # Default output="complete"
+
+            Download multiple files and get paths as they complete:
+                >>> urls_map = {
+                ...     "http://example.com/image.jpg": "image.jpg",
+                ...     "http://example.com/data.csv": "data/data.csv"
+                ... }
+                >>> for url, path in Download.download(urls_map, output="file_path"):
+                ...     print(f"Downloaded {url} to {path}")
+
+            Download files using multiple processes and get futures:
+                >>> from concurrent.futures import as_completed
+                >>> urls_to_download = {"http://example.com/archive.zip": "archive.zip"}
+                >>> futures_gen = Download.download(
+                ...     urls_to_download,
+                ...     mode="process",
+                ...     output="future",
+                ...     max_workers=2
+                ... )
+                >>> for future in as_completed(futures_gen):
+                ...     try:
+                ...         url, file_path = future.result()
+                ...         print(f"Successfully downloaded {url} to {file_path}")
+                ...     except Exception as e:
+                ...         print(f"Failed to download a file: {e}")
         """
         return Download.download_to_file(urls_to_files, **kwargs)
 
@@ -188,33 +241,46 @@ class Download(BaseModule):
     ):
         r"""Core implementation for downloading content from URLs using an executor.
 
-        This method handles the setup of the executor and submission of download tasks.
-        It's generally recommended to use the `download` method instead, as it provides
-        more user-friendly output options.
+        This method handles the setup of the executor (ThreadPoolExecutor or
+        ProcessPoolExecutor) and submits download tasks using `_get_to_file`.
+        It provides different output modes based on the `output` parameter.
 
         Args:
-            urls_to_files (Mapping[str, str | Path]): Mapping of URLs to local file paths.
-            headers (dict[str, str] | None): HTTP headers. Defaults to None.
-            max_workers (int): Maximum number of workers.
-                Defaults to DEFAULT_MAX_WORKERS.
-            chunk_size (int): Chunk size for streaming.
-                Defaults to DEFAULT_CHUNK_SIZE.
-            timeout (int): Request timeout. Defaults to DEFAULT_TIMEOUT.
-            decode_content (bool): Whether to decode content based on response headers.
-                Defaults to True.
-            mode (Literal["thread", "process"]): "thread" or "process" for executor type.
+            urls_to_files: A mapping where keys are URLs (str)
+                and values are local file paths (str or Path object) for saving content.
+            headers: HTTP headers to use for requests.
+                Defaults to None (an empty dictionary will be used).
+            max_workers: The maximum number of worker threads or processes to use
+                for concurrent downloads. Defaults to DEFAULT_MAX_WORKERS.
+            chunk_size: The size (in bytes) of chunks to use when streaming
+                download content. Defaults to DEFAULT_CHUNK_SIZE.
+            timeout: The timeout (in seconds) for HTTP requests.
+                Defaults to DEFAULT_TIMEOUT.
+            decode_content: If True, decodes the response content based on
+                response headers (e.g., for gzipped content). Defaults to True.
+            mode: Specifies the type of executor to use.
+                "thread" for `ThreadPoolExecutor`, "process" for `ProcessPoolExecutor`.
                 Defaults to "thread".
-            output (Literal["complete", "file_path", "future", "executor"]):
-                Specifies return type. Defaults to "complete".
+            output: Determines the
+                return behavior. Defaults to "complete".
+                - "complete": Waits for all downloads to finish and returns None.
+                - "file_path": Returns a generator that yields `(url, Path)` tuples
+                  as each download completes.
+                - "future": Returns a generator that yields `Future` objects for
+                  each submitted download task.
 
         Returns:
-            None | Generator[tuple[str, Path]] | Generator[Future[tuple[str, Path]]] | \\
-            tuple[list[Future[tuple[str, Path]]], Executor]:
-            Dependent on the `output` parameter:
-            - None for "complete".
-            - Generator of (URL, Path) for "file_path".
-            - Generator of Futures for "future".
-            - Tuple of (list of Futures, Executor) for "executor".
+            The return type depends on the `output` argument:
+                - `None`: If `output` is "complete".
+                - `Generator[tuple[str, Path]]`: If `output` is "file_path".
+                - `Generator[Future[tuple[str, Path]]]`: If `output` is "future".
+
+        Raises:
+            NotImplementedError: If an unsupported `output` mode is provided.
+            Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
+            propagated, especially when `output="future"` and `future.result()` is called.
+            For "complete" and "file_path" modes, exceptions during individual downloads
+            are caught and logged, allowing other downloads to proceed.
         """
         if headers is None:
             headers = {}

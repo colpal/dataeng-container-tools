@@ -6,14 +6,6 @@ and one global variable default_secret_folder. On import it automatically search
 for secret files and adds their contents to the list of terms to censor. Also contains
 global variables containing the default secret folder, the default GCS secret location,
 and the list of secret files automatically found in the default secret folder.
-
-Typical usage example:
-
-    setup_default_stdio()
-    print("Secret Information")    # prints "Secret Information"
-    SafeTextIO.add_words('Secret')
-    print("Secret Information)     # prints "******* Information"
-
 """
 
 from __future__ import annotations
@@ -31,45 +23,96 @@ logger = logging.getLogger("Container Tools")
 
 
 class SupportsStr(Protocol):
-    """A protocol that defines a __str__ method."""
+    """Protocol for objects that support the `__str__` method.
+
+    This protocol ensures that an object can be converted to a string
+    representation, which is essential for classes like `SafeTextIO`
+    that need to process various types of input for output.
+    """
 
     def __str__(self) -> str:
-        """Return a string representation of the object."""
+        """Returns the string representation of the object.
+
+        Returns:
+            The string representation of the object.
+        """
         ...
 
 
 class SafeTextIO(TextIO):
-    """Prints output with secrets removed.
+    """A TextIO wrapper that censors sensitive information from output.
 
-    This class wraps any TextIO object so that when print or display
-    calls are made this class is the one that processes them. The
-    class maintains a list of 'bad_words' which are replaced with
-    asterisks whenever someone tries to print them. By default this
-    list is populated with the contents of any secret files that
-    are in the default vault secrets folder.
+    This class wraps an existing TextIO stream (like `sys.stdout` or `sys.stderr`)
+    to intercept and sanitize any text written to it. It maintains a list of
+    "bad words" (secrets or sensitive data) which are replaced with asterisks
+    before being printed. This helps prevent accidental leakage of secrets in logs
+    or console outputs.
+
+    The list of bad words can be populated automatically from secret files or
+    manually by adding specific strings.
+
+    Attributes:
+        _bad_words (ClassVar[set[str]]): A set of strings to be censored.
+        _pattern_cache (ClassVar[tuple[re.Pattern, int]]): Cache for the compiled
+            regex pattern used for censoring, along with a version number to
+            track changes to `_bad_words`.
+
+    Examples:
+        Using with `io.StringIO`:
+            >>> import io
+            >>> string_io = io.StringIO()
+            >>> safe_io = SafeTextIO(string_io)
+            >>> SafeTextIO.add_words(["confidential_data"])
+            >>> safe_io.write("This message contains confidential_data.")
+            >>> print(string_io.getvalue())
+            This message contains *****************.
+            >>> string_io.close()
+
+        Using with an open file:
+            >>> import os
+            >>> file_path = "temp_test_file.txt"
+            >>> with open(file_path, "w") as f:
+            ...     safe_file_io = SafeTextIO(f)
+            ...     SafeTextIO.add_words(["file_secret"])
+            ...     safe_file_io.write("Secret in file: file_secret.")
+            >>> with open(file_path, "r") as f:
+            ...     content = f.read()
+            >>> print(content)
+            Secret in file: *************.
+            >>> os.remove(file_path) # Clean up
     """
 
     _bad_words: ClassVar[set[str]] = set()
     _pattern_cache: ClassVar[tuple[re.Pattern, int]] = (re.compile(""), 0)  # Track int "version" of _bad_words
 
     def __init__(self, textio: TextIO, bad_words: Iterable[str | SupportsStr] = []) -> None:
-        """Initialize safe_stdout with desired configuration.
+        """Initializes a SafeTextIO instance.
 
         Args:
-            textio: The original TextIO object to wrap.
-            bad_words: An iterable of words to censor from output.
-
+            textio: The TextIO object (e.g., `sys.stdout`, `sys.stderr`)
+                to wrap and sanitize.
+            bad_words: An initial iterable
+                of words or objects convertible to strings that should be censored.
+                Defaults to an empty list.
         """
-        self.__old_textio = textio
+        self.__old_textio_write = textio.write
+        textio.write = self.write
         SafeTextIO.add_words(bad_words)
 
-    def write(self, message: str | SupportsStr) -> int:
-        """Output the desired message with secrets removed.
+    def write(self, message: str | SupportsStr, /) -> int:
+        """Writes the given message to the wrapped TextIO stream, censoring secrets.
+
+        The message is first converted to a string. Then, any occurrences of
+        "bad words" (secrets) are replaced with asterisks before writing to the
+        underlying stream.
 
         Args:
-          message: The message to output. Must either be a string or
-            have a working __str__ method associated with it.
+            message: The message to write. Can be a string
+                or any object that implements the `__str__` method.
 
+        Returns:
+            The number of characters written, as returned by the underlying
+            TextIO object's write method.
         """
         # ruff: noqa: SLF001
         # Remove above noqa when https://github.com/astral-sh/ruff/issues/17197 is fixed
@@ -78,7 +121,7 @@ class SafeTextIO(TextIO):
 
         # Skip processing if no bad words
         if not self.__class__._bad_words:
-            return self.__old_textio.write(message_str)
+            return self.__old_textio_write(message_str)
 
         # Version will be the length, assume can only add words to _bad_words (no remove or modify)
         # Computing this is far easier than set comparison
@@ -98,7 +141,7 @@ class SafeTextIO(TextIO):
         # Replace all bad words in one pass
         censored_message = pattern.sub(lambda match: "*" * len(match.group(0)), message_str)
 
-        return self.__old_textio.write(censored_message)
+        return self.__old_textio_write(censored_message)
 
     @staticmethod
     def __get_word_variants(word: str) -> set[str]:
@@ -111,11 +154,26 @@ class SafeTextIO(TextIO):
 
     @classmethod
     def add_words(cls, bad_words: Iterable[str | SupportsStr]) -> None:
-        """Add words to the list of words to censor from output.
+        """Adds words to the class-level set of words to be censored.
+
+        This method updates the `_bad_words` set, which is used by all
+        `SafeTextIO` instances to identify and censor secrets. It also handles
+        adding variants of the words (e.g., JSON-escaped versions) to
+        improve censorship effectiveness.
 
         Args:
-          bad_words: An iterable containing the words to
-            add to the list of words to censor in output.
+            bad_words: An iterable of words or
+                objects convertible to strings to add to the censorship list.
+
+        Examples:
+            Adding words to censor:
+                >>> setup_default_stdio() # Assuming stdout is now SafeTextIO
+                >>> SafeTextIO.add_words(["new_secret_word"])
+                >>> print("This is a new_secret_word.")
+                This is a ***************.
+                >>> SafeTextIO.add_words(["another_one", "sensitive_info"])
+                >>> print("Testing another_one and sensitive_info.")
+                Testing *********** and **************.
 
         """
         cls._bad_words.update(
@@ -129,12 +187,15 @@ class SafeTextIO(TextIO):
 
 
 def setup_default_stdio() -> None:
-    """Censors the contents of JSONs found in the secrets folder from output.
+    """Replaces `sys.stdout` and `sys.stderr` with `SafeTextIO` wrappers.
 
-    This function sets up both sys.stdout and sys.stderr with the SafeTextIO wrapper.
-    This method should only be called once, and by design is called when this Python
-    package is imported. To add values to the list of words to censor from output, use
-    either add_secrets_folder() or SafeTextIO.add_words().
+    This function globally enables secret censoring for standard output and
+    standard error streams. After calling this, any `print()` statements or
+    direct writes to `sys.stdout` or `sys.stderr` will be processed by
+    `SafeTextIO` to remove sensitive information.
     """
     sys.stdout = SafeTextIO(textio=sys.stdout)
     sys.stderr = SafeTextIO(textio=sys.stderr)
+
+
+setup_default_stdio()

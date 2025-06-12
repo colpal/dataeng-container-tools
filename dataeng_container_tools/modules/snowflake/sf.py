@@ -1,8 +1,6 @@
 """This module is for working with Snowflake.
 
 This module can connect to a Snowflake table and execute a custom query.
-
-Example use case:
 """
 
 from __future__ import annotations
@@ -24,13 +22,13 @@ class Snowflake(BaseModule):
     This class creates a connection to a snowflake table and executes custom queries entered.
 
     Attributes:
-        sf_secret_location (str): Path to vault secrets.
-        role (str): snowflake role needed for connection
-        database (str): snowflake database the user wants to connect to
-        schema (str): snowflake schema the user wants to connect to
-        warehouse (str): snowflake warehouse the user wants to connect to
-        account (str): snowflake account used for connection
-        query_tag (str): tag of query performed
+        sf_secret_location: Path to vault secrets.
+        role: snowflake role needed for connection
+        database: snowflake database the user wants to connect to
+        schema: snowflake schema the user wants to connect to
+        warehouse: snowflake warehouse the user wants to connect to
+        account: snowflake account used for connection
+        query_tag: tag of query performed
     """
 
     MODULE_NAME: ClassVar[str] = "SF"

@@ -5,17 +5,6 @@ classes: `CustomCommandLineArgument`, `CommandLineArgumentType`,
 and `CommandLineArguments`. `CommandLineArguments` contains most
 of the functionality. `CommandLineArgumentType` is an enumeration.
 `CustomCommandLineArgument` is a wrapper for `parser.add_argument()`.
-
-Typical usage example:
-
-    my_inputs = CommandLineArguments(secret_locations=CommandLineArgumentType.OPTIONAL,
-                                    input_files=CommandLineArgumentType.REQUIRED,
-                                    output_files=CommandLineArgumentType.REQUIRED)
-
-    input_uris = my_inputs.get_input_uris()
-    output_uris = my_inputs.get_output_uris()
-    secret_locations = my_inputs.get_secret_locations()
-    file_io = gcs_file_io(gcs_secret_location = secret_locations.GCS)
 """
 
 from __future__ import annotations
@@ -39,13 +28,47 @@ logger = logging.getLogger("Container Tools")
 class CustomCommandLineArgument:
     """Class for creating custom command line arguments.
 
-    Wrapper of `argparse.add_argument`. <br />
+    This class acts as a wrapper around `argparse.ArgumentParser.add_argument()`,
+    allowing for the definition of custom command-line arguments that can be
+    seamlessly integrated into the `CommandLineArguments` class.
+
+    See: https://docs.python.org/3/library/argparse.html#the-add-argument-method
+
     Source: https://github.com/python/typeshed/blob/30b16c168d428f2690473e8d317c5eb240e7000e/stdlib/argparse.pyi
 
-    This class is used for creating custom command line arguments. A
-    list of these objects can be passed into `CommandLineArguments` which
-    will add them as command line arguments, parse the inputs, and return the results.
+    Attributes:
+        name: The name of the argument (e.g., "my_custom_arg"). This will be prefixed
+            with "--" when added to the parser.
+        action: The action to take when this argument
+            is encountered. See `argparse.add_argument()` documentation.
+        nargs: The number of command-line arguments that should be
+            consumed. See `argparse.add_argument()` documentation.
+        const: A constant value required by some action and nargs selections.
+        default: The value produced if the argument is absent.
+        type: The type to which the command-line argument should
+            be converted.
+        choices: A container of the allowable values.
+        required: Whether the command-line option may be omitted.
+        help: A brief description of what the argument does.
+        metavar: A name for the argument in usage messages.
+        dest: The name of the attribute to be added to the object returned
+            by `parse_args()`.
+        version: The version of the argument (rarely used directly, often for
+            "version" action).
+        kwargs: Additional keyword arguments to pass to `add_argument()`.
 
+    Examples:
+        Defining a custom argument for a batch size:
+            >>> batch_size_arg = CustomCommandLineArgument(
+            ...     name="batch_size",
+            ...     type=int,
+            ...     default=32,
+            ...     help="The number of items to process in a batch."
+            ... )
+            >>> # This can then be passed to CommandLineArguments:
+            >>> # cla = CommandLineArguments(custom_inputs=[batch_size_arg])
+            >>> # args = cla.get_arguments()
+            >>> # print(args.batch_size) # Access the parsed value
     """
 
     def __init__(
@@ -72,21 +95,21 @@ class CustomCommandLineArgument:
         See: https://docs.python.org/3.9/library/argparse.html
 
         Args:
-            name (str): Argument name.
-            action (str | type[argparse.Action]): Indicates the basic type of action to be taken when this
+            name: Argument name.
+            action: Indicates the basic type of action to be taken when this
                 argument is encountered at the command line.
-            nargs (int | str | None): Indicates the number of command-line arguments that should be consumed.
-            const (Any): A constant value required by some action and nargs selections.
-            default (Any): The value produced if the argument is absent from the command line and if it is
+            nargs: Indicates the number of command-line arguments that should be consumed.
+            const: A constant value required by some action and nargs selections.
+            default: The value produced if the argument is absent from the command line and if it is
                 absent from the namespace object.
-            type (argparse._ActionType): The type to which the command-line argument should be converted.
-            choices (Iterable[argparse._T] | None): A container of the allowable values for the argument.
-            required (bool): Indicates whether or not the command-line option may be omitted (optionals only).
-            help (str | None): A brief description of what the argument does.
-            metavar (str | tuple[str, ...] | None): The name for the argument in usage messages.
-            dest (str | None): The name of the attribute to be added to the object returned by parse_args().
-            version (str): Version of the argument.
-            kwargs (Any): Additional keyword arguments.
+            type: The type to which the command-line argument should be converted.
+            choices: A container of the allowable values for the argument.
+            required: Indicates whether or not the command-line option may be omitted (optionals only).
+            help: A brief description of what the argument does.
+            metavar: The name for the argument in usage messages.
+            dest: The name of the attribute to be added to the object returned by parse_args().
+            version: Version of the argument.
+            kwargs: Additional keyword arguments.
 
         """
         self.name = name
@@ -142,11 +165,26 @@ class CommandLineArgumentType(Enum):
 class CommandLineArguments:
     """Creates, parses, and retrieves command line inputs.
 
-    This class creates command line arguments that are typically
-    used in Airflow containers. It will handle much of the backend
-    boilerplate code involved with creating, parsing, and storing
-    the relevant command line arguments using Python's argparse.
-    Includes helper functions for using the command line inputs.
+    This class simplifies the process of defining and parsing command-line
+    arguments commonly used in containerized applications, particularly within
+    frameworks like Airflow. It provides a singleton interface to manage
+    standard arguments (like input/output files, secret locations) and allows
+    for the inclusion of custom arguments.
+
+    It leverages Python's `argparse` module internally to handle the parsing
+    and provides convenient methods to access the parsed values.
+
+    Examples:
+        Basic usage with optional secret locations:
+            >>> from dataeng_container_tools.cla import CommandLineArgumentType
+            >>> cla_instance = CommandLineArguments(
+            ...     secret_locations=CommandLineArgumentType.OPTIONAL
+            ... )
+            >>> args = cla_instance.get_arguments()
+            >>> if args.secret_locations:
+            ...     print(f"GCS Secret Location: {args.secret_locations.get("GCS")}")
+            >>> # Simulate command line:
+            >>> # python your_script.py --secret_locations '{"GCS": "/vault/secrets/gcs_creds"}'
     """
 
     # Singleton instance
@@ -158,7 +196,7 @@ class CommandLineArguments:
         Implements the singleton pattern to ensure only one instance exists.
 
         Returns:
-            CommandLineArguments: The singleton instance
+            The singleton instance
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -180,17 +218,17 @@ class CommandLineArguments:
         """Initialize CommandLineArguments with desired configuration.
 
         Args:
-            custom_inputs (list[CustomCommandLineArgument] | None): List of custom command line arguments.
-            secret_locations (CommandLineArgumentType): Determines if secret locations are required, optional,
+            custom_inputs: List of custom command line arguments.
+            secret_locations: Determines if secret locations are required, optional,
                 or unused.
-            input_files (CommandLineArgumentType): Determines if input files are required, optional, or unused.
-            input_dtypes (CommandLineArgumentType): Determines if input data types are required, optional, or unused.
-            output_files (CommandLineArgumentType): Determines if output files are required, optional, or unused.
-            identifying_tags (CommandLineArgumentType): Determines if identifying tags are required, optional,
+            input_files: Determines if input files are required, optional, or unused.
+            input_dtypes: Determines if input data types are required, optional, or unused.
+            output_files: Determines if output files are required, optional, or unused.
+            identifying_tags: Determines if identifying tags are required, optional,
                 or unused.
-            description (str | None): Description for the command line parser.
-            parser (argparse.ArgumentParser | None): Custom parser for command line arguments.
-            parse_known_args (bool): Whether to parse known arguments only.
+            description: Description for the command line parser.
+            parser: Custom parser for command line arguments.
+            parse_known_args: Whether to parse known arguments only.
 
         """
         if custom_inputs is None:
@@ -365,7 +403,7 @@ class CommandLineArguments:
         """Retrieve the arguments passed in through the command line.
 
         Returns:
-            argparse.Namespace: A Namespace object with all of the command line arguments.
+            A Namespace object with all of the command line arguments.
 
         """
         return self.__args
@@ -384,8 +422,8 @@ class CommandLineArguments:
         """Retrieve the input URIs passed in through the command line.
 
         Returns:
-            list[str]: A list of all input URIs passed in through the command line. URIs
-            are of the format 'gs://bucket_name/input_path/filename'.
+            A list of all input URIs passed in through the command line. URIs
+            are of the format "gs://bucket_name/input_path/filename".
 
         """
         if not self.__input_files:
@@ -412,8 +450,8 @@ class CommandLineArguments:
         """Retrieve the output URIs passed in through the command line.
 
         Returns:
-            list[str]: A list of all output URIs passed in through the command line. URIs
-            are of the format 'gs://bucket_name/output_path/filename'.
+            A list of all output URIs passed in through the command line. URIs
+            are of the format "gs://bucket_name/output_path/filename".
 
         """
         if not self.__output_files:

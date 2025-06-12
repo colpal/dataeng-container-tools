@@ -95,10 +95,11 @@ class SafeTextIO(TextIO):
                 of words or objects convertible to strings that should be censored.
                 Defaults to an empty list.
         """
-        self.__old_textio = textio
+        self.__old_textio_write = textio.write
+        textio.write = self.write
         SafeTextIO.add_words(bad_words)
 
-    def write(self, message: str | SupportsStr) -> int:
+    def write(self, message: str | SupportsStr, /) -> int:
         """Writes the given message to the wrapped TextIO stream, censoring secrets.
 
         The message is first converted to a string. Then, any occurrences of
@@ -120,7 +121,7 @@ class SafeTextIO(TextIO):
 
         # Skip processing if no bad words
         if not self.__class__._bad_words:
-            return self.__old_textio.write(message_str)
+            return self.__old_textio_write(message_str)
 
         # Version will be the length, assume can only add words to _bad_words (no remove or modify)
         # Computing this is far easier than set comparison
@@ -140,7 +141,7 @@ class SafeTextIO(TextIO):
         # Replace all bad words in one pass
         censored_message = pattern.sub(lambda match: "*" * len(match.group(0)), message_str)
 
-        return self.__old_textio.write(censored_message)
+        return self.__old_textio_write(censored_message)
 
     @staticmethod
     def __get_word_variants(word: str) -> set[str]:

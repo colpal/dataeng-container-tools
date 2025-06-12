@@ -8,7 +8,8 @@ from typing import Any
 
 import pytest
 
-from dataeng_container_tools import SafeTextIO, SecretManager, setup_default_stdio
+from dataeng_container_tools import SafeTextIO, SecretManager
+from dataeng_container_tools.safe_textio import setup_default_stdio
 
 
 @pytest.fixture(autouse=True)

@@ -183,8 +183,8 @@ class GCSFileIO(BaseModule):
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> dict[
         str,
-        Any,
-    ]: ...  # TODO: Returning type dict[str, pd.DataFrame | io.BytesIO] might be too ambiguous for user typehinting use.
+        Any,  # dict[str, pd.DataFrame | io.BytesIO]
+    ]: ...
 
     def download(
         self,

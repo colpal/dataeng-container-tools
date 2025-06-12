@@ -369,6 +369,7 @@ def test_download_with_wildcard(
     assert isinstance(report_result["report.bin"], io.BytesIO)
     assert report_result["report.bin"].getvalue() == binary_content
 
+
 def test_download_with_dtype_parameter(
     gcs_file_io: GCSFileIO,
     test_bucket: storage.Bucket,

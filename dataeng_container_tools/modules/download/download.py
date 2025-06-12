@@ -311,6 +311,7 @@ class Download(BaseModule):
                 return None
 
             if output == "file_path":
+
                 def file_path_generator() -> Generator:
                     for future in as_completed(futures_urls):
                         url = futures_urls[future]
@@ -319,6 +320,7 @@ class Download(BaseModule):
                             yield url, file_path
                         except Exception:
                             logger.exception("Error downloading %s", url)
+
                 return file_path_generator()
 
             if output == "future":

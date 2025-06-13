@@ -93,8 +93,14 @@ max-complexity = 20
     "PLR2004", # Magic value used in comparison, ...
     "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
 
+    # Others
     "S603",   # Subprocess
     "SLF001", # Private member access
+]
+"docs/**/*.py" = [
+    "S603",   # Subprocess
+    "A001",   # Builtin variable shadowing
+    "ERA001", # Commented out code
 ]
 
 [tool.pyright]

@@ -34,7 +34,8 @@ def build_html_docs() -> bool:
     """Build HTML documentation."""
     try:
         docs_dir = Path(__file__).parent
-        subprocess.run(["sphinx-build", "-b", "html", ".", "build/html"], cwd=docs_dir, check=True)
+        cmd = ["sphinx-build", "-b", "html", ".", "build/html"]
+        subprocess.run(cmd, cwd=docs_dir, check=True)
         logger.info("HTML documentation built successfully")
     except subprocess.CalledProcessError:
         logger.exception("Error building HTML documentation")
@@ -48,24 +49,28 @@ def build_pdf_docs() -> bool:
         docs_dir = Path(__file__).parent
 
         # First build latex files
-        subprocess.run(["sphinx-build", "-b", "latex", ".", "build/latex"], cwd=docs_dir, check=True)
+        cmd = ["sphinx-build", "-b", "latex", ".", "build/latex"]
+        subprocess.run(cmd, cwd=docs_dir, check=True)
 
         # Check if system has pdflatex
         try:
-            subprocess.run(["pdflatex", "--version"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd = ["pdflatex", "--version"]
+            subprocess.run(cmd, check=True, capture_output=True)
             has_pdflatex = True
         except (subprocess.CalledProcessError, FileNotFoundError):
             has_pdflatex = False
 
         if has_pdflatex:
             # Then compile PDF
-            subprocess.run(["make"], cwd=docs_dir / "build" / "latex", check=True)
+            cmd = ["make"]
+            subprocess.run(cmd, cwd=docs_dir / "build" / "latex", check=True)
             logger.info("PDF documentation built successfully")
             return True
 
         logger.warning("pdflatex not found. PDF generation requires LaTeX to be installed on your system.")
         logger.info(
-            "On Ubuntu/Debian systems, you can install it with: sudo apt-get install texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra latexmk"
+            "On Ubuntu/Debian systems, you can install it with: "
+            "'sudo apt-get install texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra latexmk'",
         )
         logger.info("On Windows, you can install MiKTeX (https://miktex.org/)")
         logger.info("On macOS, you can install MacTeX (https://www.tug.org/mactex/)")

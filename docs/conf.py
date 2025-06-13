@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Sphinx configuration for DE Container Tools documentation."""
 
 import datetime
@@ -6,7 +7,7 @@ from dataeng_container_tools import __version__
 
 # Project information
 project = "DE Container Tools"
-copyright = f"{datetime.datetime.now(tz=datetime.timezone.utc).year}, Colgate-Palmolive"  # noqa: A001
+copyright = f"{datetime.datetime.now(tz=datetime.timezone.utc).year}, Colgate-Palmolive"
 author = "CP DE Team"
 version = __version__
 release = version

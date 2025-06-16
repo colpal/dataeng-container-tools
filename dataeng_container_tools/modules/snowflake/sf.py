@@ -6,7 +6,7 @@ This module can connect to a Snowflake table and execute a custom query.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
@@ -46,6 +46,7 @@ class Snowflake(BaseModule):
         *,
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
+        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None:
         """Initialize a snowflake connection."""
         import snowflake.connector as sc
@@ -65,7 +66,6 @@ class Snowflake(BaseModule):
             raise TypeError(msg)
 
         self.user = sf_creds["username"]
-        self.private_key = sf_creds["rsa_private_key"]
         self.account = account
         self.warehouse = warehouse
         self.database = database
@@ -73,15 +73,28 @@ class Snowflake(BaseModule):
         self.role = role
         self.query_tag = query_tag
 
-        self.ctx: SnowflakeConnection = sc.connect(
-            user=self.user,
-            private_key=self.private_key,
-            account=account,
-            warehouse=warehouse,
-            database=database,
-            schema=schema,
-            role=role,
-        )
+        # Handle both password and private key authentication
+        connection_params = {
+            "user": self.user,
+            "account": account,
+            "warehouse": warehouse,
+            "database": database,
+            "schema": schema,
+            "role": role,
+            **kwargs,
+        }
+
+        if "rsa_private_key" in sf_creds:
+            self.private_key = sf_creds["rsa_private_key"]
+            connection_params["private_key"] = self.private_key
+        elif "password" in sf_creds:
+            self.password = sf_creds["password"]
+            connection_params["password"] = self.password
+        else:
+            msg = "Snowflake credentials must contain either 'rsa_private_key' or 'password'"
+            raise ValueError(msg)
+
+        self.ctx: SnowflakeConnection = sc.connect(**connection_params)
 
     def execute(self, query: str) -> list[tuple] | list[dict]:
         """Executes a query and returns the results."""

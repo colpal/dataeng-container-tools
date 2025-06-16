@@ -29,15 +29,22 @@ download = "https://github.com/colpal/dataEng-container-tools/releases"
 tracker = "https://github.com/colpal/dataEng-container-tools/issues"
 
 [project.optional-dependencies]
-dev = [
-    "ruff==0.11.8",
-    "pytest==8.3.5",
-    "pytest-cov==6.11",
-    "requests-mock==1.12.1",
-    "types-psutil",
-    "types-requests",
+typing = [
     "types-setuptools",
-    "pandas-stubs",
+    "types-psutil==7.0.0.20250601",
+    "types-requests==2.31.0.6",
+    "pandas-stubs==2.2.2.240807",
+]
+test = [
+    "pytest==8.3.5",
+    "pytest-cov==6.1.1",
+    "requests-mock==1.12.1",
+    "fakesnow[server]==0.9.41",
+    "googleapis-storage-testbench @ git+https://github.com/googleapis/storage-testbench@1c8f6306bf9969b7b86d09da9ac0fe61c79682b1", # v0.54.0 No official pip package yet
+]
+dev = [
+    "dataeng-container-tools[typing, test]",
+    "ruff==0.11.8",
 ]
 
 [build-system]

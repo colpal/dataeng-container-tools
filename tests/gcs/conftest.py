@@ -11,8 +11,8 @@ import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_gcs_emulator(request: pytest.FixtureRequest) -> Generator[None, None, None]:
-    """Set up GCS emulator environment variable."""
+def setup_gcs_testbench(request: pytest.FixtureRequest) -> Generator[None, None, None]:
+    """Set up GCS emulator."""
     gcs_port = request.config.getoption("--gcs-port")
     os.environ["STORAGE_EMULATOR_HOST"] = f"http://localhost:{gcs_port}"
 

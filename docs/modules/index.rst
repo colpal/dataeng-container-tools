@@ -9,4 +9,5 @@ This section provides detailed information and usage examples for the DE Contain
    command-line
    secrets-handling
    gcs-operations
-   db-operations
+   datastore-operations
+   container-utils

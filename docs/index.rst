@@ -11,7 +11,7 @@ DE Container Tools is a Python package containing tools for data engineering con
 * **SecretManager** - Secret management utilities
 * **Modules**
    * **GCS** - Google Cloud Storage interfaces
-   * **DB** - Database operations
+   * **DS** - Datastore operations
 
 For detailed usage and examples, see the :doc:`example-demos/index` section and the :doc:`/modules/index` section`
 

@@ -1,19 +1,19 @@
-Database Operations
-===================
+Datastore Operations
+====================
 
-The Database (DB) module provides tools for interacting with Google Cloud Datastore, allowing you to store and retrieve task information.
+The Datastore (DS) module provides tools for interacting with Google Cloud Datastore, allowing you to store and retrieve task information.
 
 Basic Usage
 -----------
 
-Here's a basic example of using the ``DB`` class:
+Here's a basic example of using the ``Datastore`` class:
 
 .. code-block:: python
 
-    from dataeng_container_tools import DB
+    from dataeng_container_tools import Datastore
 
-    # Initialize the DB client with your credentials
-    db = DB(
+    # Initialize the Datastore client with your credentials
+    ds = Datastore(
         task_kind="MyTask",
         gcp_secret_location="/path/to/datastore-credentials.json"
     )
@@ -31,7 +31,7 @@ Here's a basic example of using the ``DB`` class:
     }
 
     # Handle the task (create or update entry)
-    db.handle_task(params=task_params)
+    ds.handle_task(params=task_params)
 
 Querying Task Entries
 ---------------------
@@ -40,10 +40,10 @@ You can query existing task entries:
 
 .. code-block:: python
 
-    from dataeng_container_tools import DB
+    from dataeng_container_tools import Datastore
 
-    # Initialize the DB client
-    db = DB(
+    # Initialize the Datastore client
+    ds = Datastore(
         task_kind="MyTask", 
         gcp_secret_location="/path/to/datastore-credentials.json",
     )
@@ -55,7 +55,7 @@ You can query existing task entries:
     }
 
     # Query task entries
-    task_entries = db.get_task_entry(
+    task_entries = ds.get_task_entry(
         filter_map=filter_map,
         kind="MyTask",
     )
@@ -73,10 +73,10 @@ You can update the status of a task:
 
 .. code-block:: python
 
-    from dataeng_container_tools import DB
+    from dataeng_container_tools import Datastore
 
-    # Initialize the DB client
-    db = DB(
+    # Initialize the Datastore client
+    ds = Datastore(
         task_kind="MyTask", 
         gcp_secret_location="/path/to/datastore-credentials.json",
     )
@@ -89,7 +89,7 @@ You can update the status of a task:
     }
 
     # Find the existing task entry
-    entries = db.get_task_entry(
+    entries = ds.get_task_entry(
         filter_map=filter_map,
         kind="MyTask",
     )
@@ -105,7 +105,7 @@ You can update the status of a task:
         }
 
         # Update the task
-        db.handle_task(params=updated_params)
+        ds.handle_task(params=updated_params)
 
 Ordering Task Entries
 ---------------------
@@ -114,10 +114,10 @@ You can specify ordering when querying task entries:
 
 .. code-block:: python
 
-    from dataeng_container_tools import DB
+    from dataeng_container_tools import Datastore
 
-    # Initialize the DB client
-    db = DB(
+    # Initialize the Datastore client
+    ds = Datastore(
         task_kind="MyTask", 
         gcp_secret_location="/path/to/datastore-credentials.json",
     )
@@ -132,7 +132,7 @@ You can specify ordering when querying task entries:
     }
 
     # Query task entries with ordering
-    task_entries = db.get_task_entry(
+    task_entries = ds.get_task_entry(
         filter_map=filter_map,
         kind="MyTask",
         order_task_entries_params=order_params,

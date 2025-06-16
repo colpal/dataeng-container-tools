@@ -35,7 +35,7 @@ Development Environment Setup
          # On Windows
          .venv\Scripts\activate
 
-         pip install -e ".[dev,docs]"
+         pip install -e ".[dev]"
 
    .. tab:: UV (Recommended)
 
@@ -57,7 +57,7 @@ Development Environment Setup
          .venv\Scripts\activate
          
          # Install development dependencies
-         uv pip install -e ".[dev,docs]"
+         uv pip install -e ".[dev]"
 
 You will also need to install the `Ruff extension <https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff>`_
 
@@ -78,7 +78,7 @@ This project uses Ruff for linting and code quality enforcement:
 
        ruff check .
 
-3. Follow these coding standards:
+2. Follow these coding standards:
 
    - Use `Google-style docstrings <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_
    - Follow `Ruff rules <https://docs.astral.sh/ruff/rules/>`_
@@ -100,9 +100,9 @@ Submitting Changes
 
    .. code-block:: bash
 
-      git push origin master
+      git push origin your-branch
 
-2. Open a Pull Request merging from your fork to the main repository
+2. Open a Pull Request merging from your fork to the `main` repository
 3. Wait for code review
 
 Building Documentation

@@ -31,11 +31,13 @@ The ``GCSFileIO`` class can be summarized with 2 main operations:
     |   ``upload_file``
     |   ``upload_object``
 
-Note that ``download`` and ``upload`` wraps around more specific operations such as ``download_to_file``.
+Note that ``download`` and ``upload`` wraps around more specialized operations such as ``download_to_file``.
 
 As their name suggests, each operation performs a download or upload using disk files or objects. They take a GCS URI which is in the general format ``gs://bucket/path/file.extension``. See :ref:`command-line-input-output` which help builds these URIs.
 
-With ``download`` to object, the output is a ``dict[str, pd.DataFrame | BytesIO]`` where the key is the path of the file. If you only expect one output then use unpacking on the dict' values. With more consider loops or iterators.
+With ``download`` to object, the output is a ``dict[str, pd.DataFrame | BytesIO]`` where the key is the path of the file (without the ``gs://bucket/`` prefix). If you only expect one output then use dictionary access or unpacking. With multiple files, consider loops or iterators.
+
+When there are two inputs (such as a local file and destination uri), the format is always ``(source, destination)`` tuples in a list called ``src_to_dst``. So downloading is ``(gcs_uri, local_path)`` and uploading is ``(local_path, gcs_uri)`` or ``(object, gcs_uri)``.
 
 Here is what these operations might look like:
 
@@ -48,14 +50,14 @@ Here is what these operations might look like:
     gcs = GCSFileIO()
 
     # Download a file from GCS to a DataFrame
-    # 'df, = ...' unpacks the dict values, or use `[df] = ...` if you prefer that syntax
+    # 'df, = ...' unpacks the dict values inline, or use `[df] = ...` if you prefer that syntax
     df, = gcs.download("gs://my-bucket/path/to/data.csv").values()
 
     # Process the data
     df['new_column'] = df['existing_column'] * 2
 
     # Upload the modified DataFrame back to GCS
-    gcs.upload({df: "gs://my-bucket/path/to/processed_data.csv"})
+    gcs.upload([(df, "gs://my-bucket/path/to/processed_data.csv")])
 
 With file operations instead of object operations it looks like:
 
@@ -68,10 +70,10 @@ With file operations instead of object operations it looks like:
     gcs = GCSFileIO()
 
     # Download a file from GCS to a local file (notice no return unlike with to object)
-    gcs.download({"gs://my-bucket/path/to/data.csv": "./local-folder/local-file.csv"})
+    gcs.download([("gs://my-bucket/path/to/data.csv", "./local-folder/local-file.csv")])
 
     # Upload a local file to GCS
-    gcs.upload({"./local-folder/local-file.csv": "gs://my-bucket/other-path/to/data.csv"})
+    gcs.upload([("./local-folder/local-file.csv", "gs://my-bucket/other-path/to/data.csv")])
 
 Working with Different File Formats
 -----------------------------------
@@ -100,18 +102,20 @@ The GCS module supports various file formats including ``parquet``, ``csv``, ``x
     result_df = pd.concat([parquet_df, csv_df])
 
     # Upload in different formats
-    gcs.upload({result_df: "gs://my-bucket/output.parquet"})
+    gcs.upload([(result_df, "gs://my-bucket/output.parquet")])
 
     gcs.upload(
-        gcs_uris={result_df: "gs://my-bucket/output.csv"},
-        header=True,
+        src_to_dst=[(result_df, "gs://my-bucket/output.csv")],
+        header=True,  # Can input pd.to_csv parameters after
         index=False,
     )
 
 Batch Operations
 ----------------
 
-All operations support either a single GCS URI or a list. By inputting a list it will perform in batches.
+As mentioned before, both ``download`` and ``upload`` accept a list of tuples under ``src_to_dst``. By inputting more than 1 tuple in the list, the operations can perform in batches. For example, ``upload`` can perform both file and object operations at once.
+
+If you prefer to use two independent lists to manage the src and dst, Python's `zip <https://docs.python.org/3.3/library/functions.html#zip>`_ is also accepted.
 
 .. code-block:: python
 
@@ -130,7 +134,7 @@ All operations support either a single GCS URI or a list. By inputting a list it
     processed_files = []
     for df in files:
         # Perform operations on each DataFrame
-        df['processed'] = True
+        df["processed"] = True
         processed_files.append(df)
     
     upload_files = [
@@ -140,43 +144,34 @@ All operations support either a single GCS URI or a list. By inputting a list it
     ],
 
     # Upload the processed files
-    gcs.upload(
-        gcs_uris=dict(zip(processed_files, upload_files)),
-        headers=0,
-    )
+    gcs.upload(zip(processed_files, upload_files))
 
 And just like with single processing, file operations are supported:
 
 .. code-block:: python
 
     from dataeng_container_tools import GCSFileIO
+    import pandas as pd
 
     gcs = GCSFileIO()
 
-    # Download multiple files
-    files = gcs.download({
-        "gs://my-bucket/file1.csv": "./file1.csv",
-        "gs://my-bucket/file2.csv": "./file2.csv",
-        "gs://my-bucket/file3.csv": "./file3.csv",
-    })
+    # Download multiple files to local files
+    gcs.download([
+        ("gs://my-bucket/file1.csv", "./file1.csv"),
+        ("gs://my-bucket/file2.csv", "./file2.csv"),
+        ("gs://my-bucket/file3.csv", "./file3.csv"),
+    ])
 
-    # Upload the processed files
-    gcs.upload(
-        gcs_uris={
-            "./file1.csv": "gs://my-bucket/other/file1.csv",
-            "./file2.csv": "gs://my-bucket/other/file2.csv",
-            "./file3.csv": "gs://my-bucket/other/file3.csv",
-        },
-        headers=0,
-    )
+    # Create additional data object
+    additional_object = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
 
-    # Alternate syntax, many ways to do this. Just use any collections.abc.Mapping compatible input.
-    local_files = ["./file1.csv", "./file2.csv", "./file3.csv"]
-    upload_uris = ["gs://my-bucket/other/file1.csv", "gs://my-bucket/other/file2.csv", "gs://my-bucket/other/file3.csv"]
-    gcs.upload(
-        gcs_uris=dict(zip(local_files, upload_uris)),
-        headers=0,
-    )
+    # Upload the files and object (can mix file paths and objects)
+    gcs.upload([
+        ("./file1.csv", "gs://my-bucket/other/file1.csv"),
+        ("./file2.csv", "gs://my-bucket/other/file2.csv"),
+        ("./file3.csv", "gs://my-bucket/other/file3.csv"),
+        (additional_object, "gs://my-bucket/other/file4.csv")
+    ])
 
 Globs and Wildcards
 -------------------
@@ -241,8 +236,9 @@ Some emulators:
 
 - `oittaa/gcp-storage-emulator <https://github.com/oittaa/gcp-storage-emulator>`_
 - `fsouza/fake-gcs-server <https://github.com/fsouza/fake-gcs-server>`_
+- `googleapis/storage-testbench <https://github.com/googleapis/storage-testbench/tree/main>`
 
-However, these emulators are a bit outdated and do not support globs at the time of writing.
+However, these emulators have a few issues. The first two do not support globs and will generally fail most operations. The third one only works in memory so the user cannot access internal files.
 
 .. margin::
 
@@ -257,7 +253,7 @@ However, these emulators are a bit outdated and do not support globs at the time
     gcs = GCSFileIO(local=True)
 
     # Download a file to local disk
-    gcs.download({"/emulated-gcs-bucket/file.csv": "./file.csv"})
+    gcs.download([("gs://emulated-gcs-bucket/file.csv", "./file.csv")])
 
     # Upload a local file
-    gcs.upload({"./file.csv": "/emulated-gcs-bucket/file.csv"})
+    gcs.upload([("./file.csv", "gs://emulated-gcs-bucket/file.csv")])

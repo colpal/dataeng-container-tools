@@ -61,7 +61,7 @@ def test_gcs_file_io_init_local() -> None:
 
 def test_download_invalid_input_type(gcs_file_io: GCSFileIO) -> None:
     """Test download with invalid input type raises TypeError."""
-    with pytest.raises(TypeError, match="src_dst must be a sequence of tuples, string, or list of strings"):
+    with pytest.raises(TypeError, match=r"Unsupported src_dst type:"):
         gcs_file_io.download(123)  # type: ignore[arg-type]
 
 

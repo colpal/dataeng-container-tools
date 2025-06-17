@@ -73,10 +73,10 @@ def test_upload_download_roundtrip_consistency(
     for filename in files:
         # Test: Upload using public upload method
         test_uri = f"gs://{test_bucket.name}/{filename}"
-        gcs_file_io.upload([(test_data, test_uri)])
+        gcs_file_io.upload((test_data, test_uri))
 
         # Test: Download using public download method
-        result = gcs_file_io.download([test_uri])
+        result = gcs_file_io.download(test_uri)
 
         # Verify: Check data consistency
         assert filename in result
@@ -107,10 +107,10 @@ def test_data_processing_workflow(
 
     # Test: Upload raw data to GCS
     raw_uri = f"gs://{test_bucket.name}/raw/data.csv"
-    gcs_file_io.upload([(input_file, raw_uri)])
+    gcs_file_io.upload((input_file, raw_uri))
 
     # Test: Download and process data
-    downloaded_data = gcs_file_io.download([raw_uri])
+    downloaded_data = gcs_file_io.download(raw_uri)
     raw_df = downloaded_data["raw/data.csv"]
 
     # Calculate average score by category
@@ -119,15 +119,15 @@ def test_data_processing_workflow(
 
     # Test: Upload processed data back to GCS
     processed_uri = f"gs://{test_bucket.name}/processed/summary.parquet"
-    gcs_file_io.upload([(processed_df, processed_uri)])
+    gcs_file_io.upload((processed_df, processed_uri))
 
     # Test: Download final results and save locally
-    final_results = gcs_file_io.download([processed_uri])
+    final_results = gcs_file_io.download(processed_uri)
     final_df = final_results["processed/summary.parquet"]
 
     # Save final results to local file
     output_file = temp_dir / "final_summary.parquet"
-    gcs_file_io.download([(processed_uri, output_file)])
+    gcs_file_io.download((processed_uri, output_file))
 
     # Verify: Check the workflow
     assert output_file.exists()
@@ -181,19 +181,14 @@ def test_batch_file_management(
     ]
     gcs_file_io.upload(upload_batch)
 
-    # Test: Download Files
+    # Test: Batch Download Mix of Files and Objects
     download_batch = [
         (f"gs://{test_bucket.name}/config/settings.txt", temp_dir / "downloaded_config.txt"),
         (f"gs://{test_bucket.name}/docs/README.md", temp_dir / "downloaded_readme.md"),
-    ]
-    gcs_file_io.download(download_batch)
-
-    # Test: Download Objects
-    object_uris = [
         f"gs://{test_bucket.name}/data/users.csv",
         f"gs://{test_bucket.name}/data/metrics.parquet",
     ]
-    downloaded_objects = gcs_file_io.download(object_uris)
+    downloaded_objects = gcs_file_io.download(download_batch)
 
     # Verify: Check file downloads
     assert (temp_dir / "downloaded_config.txt").read_text() == "debug=true\nversion=1.0"
@@ -226,10 +221,10 @@ def test_data_format_conversion_workflow(
 
     # Test: Upload as CSV
     csv_uri = f"gs://{test_bucket.name}/products.csv"
-    gcs_file_io.upload([(source_data, csv_uri)])
+    gcs_file_io.upload((source_data, csv_uri))
 
     # Test: Download CSV and re-upload as different formats
-    csv_data = gcs_file_io.download([csv_uri])
+    csv_data = gcs_file_io.download(csv_uri)
     products_df = csv_data["products.csv"]
 
     # Test: Convert to multiple formats
@@ -279,7 +274,7 @@ def test_wildcard_batch_operations(
 
     # Test: Use wildcard to download only sales data
     sales_pattern = f"gs://{test_bucket.name}/reports/sales_*.csv"
-    sales_data = gcs_file_io.download([sales_pattern])
+    sales_data = gcs_file_io.download(sales_pattern)
 
     # Verify: Check only sales files were downloaded
     assert len(sales_data) == 3
@@ -307,14 +302,14 @@ def test_error_handling_mixed_operations(
 
     # Test: Try to upload non-existent file (should fail)
     with pytest.raises((FileNotFoundError, OSError)):
-        gcs_file_io.upload([(invalid_file, f"gs://{test_bucket.name}/invalid.txt")])
+        gcs_file_io.upload((invalid_file, f"gs://{test_bucket.name}/invalid.txt"))
 
     # Test: Upload valid data, then test successful and failed downloads
     valid_data = pd.DataFrame({"test": [1, 2, 3]})
-    gcs_file_io.upload([(valid_data, f"gs://{test_bucket.name}/exists.csv")])
+    gcs_file_io.upload((valid_data, f"gs://{test_bucket.name}/exists.csv"))
 
     # Test: Download existing file
-    result = gcs_file_io.download([f"gs://{test_bucket.name}/exists.csv"])
+    result = gcs_file_io.download(f"gs://{test_bucket.name}/exists.csv")
 
     # Verify: Confirm file exists
     assert "exists.csv" in result

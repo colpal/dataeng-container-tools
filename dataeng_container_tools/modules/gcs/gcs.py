@@ -227,7 +227,7 @@ class GCSFileIO(BaseModule):
                   (e.g., `pandas.read_parquet`, `pandas.read_csv`) when downloading to objects.
 
         Returns:
-            - `None` if only downloading to local files
+            - Empty dict if only downloading to local files
             - If downloading to Python objects: A dictionary mapping blob names to downloaded objects.
               The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet and
               .csv files; otherwise `io.BytesIO` for unrecognized types).

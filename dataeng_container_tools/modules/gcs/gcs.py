@@ -241,14 +241,14 @@ class GCSFileIO(BaseModule):
 
         Examples:
             Download a single file to a local path:
-                >>> gcs_io.download([("gs://my-bucket/config.json", "my_config.json")])
+                >>> gcs_io.download(src_dst=("gs://my-bucket/config.json", "my_config.json"))
 
             Download multiple files to local paths:
                 >>> files_to_download = [
                 ...     ("gs://my-bucket/data.csv", "data/my_data.csv"),
                 ...     ("gs://my-bucket/image.png", "images/my_image.png")
                 ... ]
-                >>> gcs_io.download(src_dst=files_to_download)
+                >>> gcs_io.download(files_to_download)
 
             Download a CSV file into a Pandas DataFrame:
                 >>> data_objects = gcs_io.download(src_dst="gs://my-bucket/report.csv", delimiter=";")
@@ -482,7 +482,7 @@ class GCSFileIO(BaseModule):
 
         Examples:
             Upload a single local file:
-                >>> gcs_io.upload(src_dst=[("path/to/my_report.pdf", "gs://my-bucket/reports/report.pdf")])
+                >>> gcs_io.upload(src_dst=("path/to/my_report.pdf", "gs://my-bucket/reports/report.pdf"))
 
             Upload multiple local files with custom metadata:
                 >>> files_to_upload = [
@@ -498,7 +498,7 @@ class GCSFileIO(BaseModule):
 
             Upload a string as a JSON file (will be json.dumps'd):
                 >>> my_config_str = '{"key": "value", "settings": [1, 2, 3]}'
-                >>> gcs_io.upload(src_dst=(my_config_str, "gs://my-bucket/configs/app_config.json"))
+                >>> gcs_io.upload((my_config_str, "gs://my-bucket/configs/app_config.json"))
         """
         # Convert to lists for simplification
         if isinstance(src_dst, (str, bytes, tuple)):

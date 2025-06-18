@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
-from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, overload
 
@@ -20,8 +20,28 @@ from dataeng_container_tools.modules import BaseModule
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
+    from types import TracebackType
 
 logger = logging.getLogger("Container Tools")
+
+
+class _ExecutorContext:
+    """Context manager for executor and futures that ensures proper cleanup."""
+
+    def __init__(self, executor: Executor, futures: set[Future[tuple[str, Path]]]) -> None:
+        self.executor = executor
+        self.futures = futures
+
+    def __enter__(self) -> set[Future[tuple[str, Path]]]:
+        return self.futures
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.executor.shutdown(wait=True)
 
 
 class Download(BaseModule):
@@ -114,7 +134,7 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["file_path"],
+        output: Literal["generator"],
     ) -> Generator[tuple[str, Path]]: ...
 
     @staticmethod
@@ -128,8 +148,8 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["future"],
-    ) -> Generator[Future[tuple[str, Path]]]: ...
+        output: Literal["futures"],
+    ) -> _ExecutorContext: ...
 
     # Default overload when output is not specified
     @staticmethod
@@ -150,14 +170,14 @@ class Download(BaseModule):
     def download(
         urls_to_files: Mapping[str, str | Path],
         **kwargs: Any,
-    ) -> None | Generator:
+    ) -> None | Generator | _ExecutorContext:
         r"""Downloads files from a mapping of URLs to local file paths.
 
         This is the primary user-facing download function. It offers multiple modes of
         operation via the `output` parameter, allowing users to:
         - Wait for all downloads to complete (`output="complete"`).
-        - Receive a generator yielding (URL, Path) tuples as files are downloaded (`output="file_path"`).
-        - Receive a generator yielding Future objects for each download task (`output="future"`).
+        - Receive a generator yielding (URL, Path) tuples as files are downloaded (`output="generator"`).
+        - Receive a context manager containing Future objects for each download task (`output="futures"`).
 
         Args:
             urls_to_files: A mapping where keys are URLs (str)
@@ -174,22 +194,23 @@ class Download(BaseModule):
                     Defaults to "thread".
                 - output: Determines the return behavior. Defaults to "complete".
                     "complete": Waits for all downloads to finish and returns None.
-                    "file_path": Returns a generator that yields `(url, Path)` tuples
+                    "generator": Returns a generator that yields `(url, Path)` tuples
                     as each download completes.
-                    "future": Returns a generator that yields `Future` objects for
-                    each submitted download task.
+                    "futures": Returns a context manager that yields a set of `Future` objects
+                    for each submitted download task and automatically handles executor cleanup.
 
         Returns:
             The return type depends on the `output` keyword argument:
                 - `None`: If `output` is "complete" (default).
-                - `Generator[tuple[str, Path]]`: If `output` is "file_path".
-                - `Generator[Future[tuple[str, Path]]]`: If `output` is "future".
+                - `Generator[tuple[str, Path]]`: If `output` is "generator".
+                - `_ExecutorContext`: If `output` is "futures". A context manager that yields
+                  a set of Future objects when entered.
 
         Raises:
             NotImplementedError: If an invalid `output` mode is specified.
             Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
-            raised during the download process, especially when `output="future"`
-            and `future.result()` is called. For "complete" and "file_path" modes,
+            raised during the download process, especially when `output="futures"`
+            and `future.result()` is called. For "complete" and "generator" modes,
             exceptions are caught and logged.
 
         Examples:
@@ -202,24 +223,24 @@ class Download(BaseModule):
                 ...     "http://example.com/image.jpg": "image.jpg",
                 ...     "http://example.com/data.csv": "data/data.csv"
                 ... }
-                >>> for url, path in Download.download(urls_map, output="file_path"):
+                >>> for url, path in Download.download(urls_map, output="generator"):
                 ...     print(f"Downloaded {url} to {path}")
 
             Download files using multiple processes and get futures:
                 >>> from concurrent.futures import as_completed
                 >>> urls_to_download = {"http://example.com/archive.zip": "archive.zip"}
-                >>> futures_gen = Download.download(
+                >>> with Download.download(
                 ...     urls_to_download,
                 ...     mode="process",
-                ...     output="future",
+                ...     output="futures",
                 ...     max_workers=2
-                ... )
-                >>> for future in as_completed(futures_gen):
-                ...     try:
-                ...         url, file_path = future.result()
-                ...         print(f"Successfully downloaded {url} to {file_path}")
-                ...     except Exception as e:
-                ...         print(f"Failed to download a file: {e}")
+                ... ) as futures:
+                ...     for future in as_completed(futures):
+                ...         try:
+                ...             url, file_path = future.result()
+                ...             print(f"Successfully downloaded {url} to {file_path}")
+                ...         except Exception as e:
+                ...             print(f"Failed to download a file: {e}")
         """
         return Download.download_to_file(urls_to_files, **kwargs)
 
@@ -233,11 +254,11 @@ class Download(BaseModule):
         timeout: int = DEFAULT_TIMEOUT,
         decode_content: bool = True,
         mode: Literal["thread", "process"] = "thread",
-        output: Literal["complete", "file_path", "future"] = "complete",
+        output: Literal["complete", "generator", "futures"] = "complete",
     ) -> (
         None  # Complete
-        | Generator[tuple[str, Path]]  # File paths
-        | Generator[Future[tuple[str, Path]]]  # Future
+        | Generator[tuple[str, Path]]  # File paths generator
+        | _ExecutorContext  # Context manager for futures
     ):
         r"""Core implementation for downloading content from URLs using an executor.
 
@@ -261,25 +282,24 @@ class Download(BaseModule):
             mode: Specifies the type of executor to use.
                 "thread" for `ThreadPoolExecutor`, "process" for `ProcessPoolExecutor`.
                 Defaults to "thread".
-            output: Determines the
-                return behavior. Defaults to "complete".
+            output: Determines the return behavior. Defaults to "complete".
                 - "complete": Waits for all downloads to finish and returns None.
-                - "file_path": Returns a generator that yields `(url, Path)` tuples
+                - "generator": Returns a generator that yields `(url, Path)` tuples
                   as each download completes.
-                - "future": Returns a generator that yields `Future` objects for
-                  each submitted download task.
+                - "futures": Returns a context manager that yields a set of `Future` objects
+                  for each submitted download task and automatically handles executor cleanup.
 
         Returns:
             The return type depends on the `output` argument:
                 - `None`: If `output` is "complete".
-                - `Generator[tuple[str, Path]]`: If `output` is "file_path".
-                - `Generator[Future[tuple[str, Path]]]`: If `output` is "future".
+                - `Generator[tuple[str, Path]]`: If `output` is "generator".
+                - `_ExecutorContext`: If `output` is "futures".
 
         Raises:
             NotImplementedError: If an unsupported `output` mode is provided.
             Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
-            propagated, especially when `output="future"` and `future.result()` is called.
-            For "complete" and "file_path" modes, exceptions during individual downloads
+            propagated, especially when `output="futures"` and `future.result()` is called.
+            For "complete" and "generator" modes, exceptions during individual downloads
             are caught and logged, allowing other downloads to proceed.
         """
         if headers is None:
@@ -287,8 +307,46 @@ class Download(BaseModule):
 
         executor_class = ThreadPoolExecutor if mode == "thread" else ProcessPoolExecutor
 
-        with executor_class(max_workers=max_workers) as executor:
-            futures_urls = {
+        if output in ["complete", "generator"]:
+            with executor_class(max_workers=max_workers) as executor:
+                futures_urls = {
+                    executor.submit(
+                        Download._get_to_file,
+                        url,
+                        Path(file_path),
+                        headers,
+                        timeout,
+                        chunk_size,
+                        decode_content=decode_content,
+                    ): url
+                    for url, file_path in urls_to_files.items()
+                }
+
+                if output == "complete":
+                    for future in as_completed(futures_urls):
+                        url = futures_urls[future]
+                        try:
+                            future.result()
+                        except Exception:
+                            logger.exception("Error downloading %s", url)
+                    return None
+
+                if output == "generator":
+
+                    def file_path_generator() -> Generator:
+                        for future in as_completed(futures_urls):
+                            url = futures_urls[future]
+                            try:
+                                url, file_path = future.result()
+                                yield url, file_path
+                            except Exception:
+                                logger.exception("Error downloading %s", url)
+
+                    return file_path_generator()
+
+        if output == "futures":
+            executor = executor_class(max_workers=max_workers)
+            futures = {
                 executor.submit(
                     Download._get_to_file,
                     url,
@@ -297,34 +355,10 @@ class Download(BaseModule):
                     timeout,
                     chunk_size,
                     decode_content=decode_content,
-                ): url
+                )
                 for url, file_path in urls_to_files.items()
             }
+            return _ExecutorContext(executor, futures)
 
-            if output == "complete":
-                for future in as_completed(futures_urls):
-                    url = futures_urls[future]
-                    try:
-                        future.result()
-                    except Exception:
-                        logger.exception("Error downloading %s", url)
-                return None
-
-            if output == "file_path":
-
-                def file_path_generator() -> Generator:
-                    for future in as_completed(futures_urls):
-                        url = futures_urls[future]
-                        try:
-                            url, file_path = future.result()
-                            yield url, file_path
-                        except Exception:
-                            logger.exception("Error downloading %s", url)
-
-                return file_path_generator()
-
-            if output == "future":
-                return (future for future in as_completed(futures_urls))
-
-            msg = f"Output specified '{output}' has not been implemented"
-            raise NotImplementedError(msg)
+        msg = f"Output specified '{output}' has not been implemented"
+        raise NotImplementedError(msg)

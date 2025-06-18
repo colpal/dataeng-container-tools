@@ -2,6 +2,8 @@
 
 import pytest
 
+pytest_plugins = "fakesnow.fixtures"
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom command line options."""

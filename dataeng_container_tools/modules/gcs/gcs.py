@@ -95,7 +95,7 @@ class GCSFileIO(BaseModule):
         Download a Parquet file to a Pandas DataFrame:
             >>> gcs_io = GCSFileIO(local=True) # Example for local mode
             >>> dataframes = gcs_io.download(src_dst="gs://my-bucket/data.parquet")
-            >>> df = dataframes["data.parquet"]
+            >>> df = dataframes["my-bucket/data.parquet"]
 
         Upload a local file to GCS:
             >>> gcs_io.upload(src_dst=[("local_file_to_upload.txt", "gs://my-bucket/uploaded_file.txt")])
@@ -411,7 +411,7 @@ class GCSFileIO(BaseModule):
                 file_obj = data
 
             # If no recognized format, return the file object itself
-            data_dict[blob.name] = file_obj
+            data_dict[f"{blob.bucket.name}/{blob.name}"] = file_obj
 
         return data_dict
 

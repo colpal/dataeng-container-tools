@@ -131,16 +131,16 @@ def test_download_complete_mode(
             assert file_path.read_text() == mock_file_content[_url], f"File content mismatch for {file_path}"
 
 
-def test_download_file_path_mode(
+def test_download_generator_mode(
     mock_urls_and_files: dict[str, Path],
     mock_file_content: dict[str, str],
 ) -> None:
-    """Test download with 'file_path' output mode."""
+    """Test download with 'generator' output mode."""
     with requests_mock.Mocker() as m:
         for url, content in mock_file_content.items():
             m.get(url, text=content)
 
-        results = list(Download.download(mock_urls_and_files, output="file_path"))
+        results = list(Download.download(mock_urls_and_files, output="generator"))
 
         assert len(results) == len(mock_urls_and_files)
 
@@ -155,28 +155,27 @@ def test_download_file_path_mode(
             assert file_path.read_text() == mock_file_content[url], f"File content mismatch for {file_path}"
 
 
-def test_download_future_mode(
+def test_download_futures_mode(
     mock_urls_and_files: dict[str, Path],
     mock_file_content: dict[str, str],
 ) -> None:
-    """Test download with 'future' output mode."""
+    """Test download with 'futures' output mode."""
     with requests_mock.Mocker() as m:
         for url, content in mock_file_content.items():
             m.get(url, text=content)
 
-        futures = list(Download.download(mock_urls_and_files, output="future"))
+        with Download.download(mock_urls_and_files, output="futures") as futures:
+            assert len(futures) == len(mock_urls_and_files)
 
-        assert len(futures) == len(mock_urls_and_files)
+            # Check that all futures are Future objects
+            for future in futures:
+                assert isinstance(future, Future), f"Expected Future object, got {type(future)}"
 
-        # Check that all futures are Future objects
-        for future in futures:
-            assert isinstance(future, Future), f"Expected Future object, got {type(future)}"
-
-        # Get results from futures
-        results = [future.result() for future in futures]
-        result_urls = {url for url, _ in results}
-        expected_urls = set(mock_urls_and_files.keys())
-        assert result_urls == expected_urls, f"Expected URLs {expected_urls}, got {result_urls}"
+            # Get results from futures
+            results = [future.result() for future in futures]
+            result_urls = {url for url, _ in results}
+            expected_urls = set(mock_urls_and_files.keys())
+            assert result_urls == expected_urls, f"Expected URLs {expected_urls}, got {result_urls}"
 
 
 def test_download_default_output_mode(
@@ -274,8 +273,8 @@ def test_download_with_error_handling(temp_dir: Path) -> None:
         assert not invalid_file.exists()
 
 
-def test_download_file_path_with_error_handling(temp_dir: Path) -> None:
-    """Test download error handling in file_path mode."""
+def test_download_generator_with_error_handling(temp_dir: Path) -> None:
+    """Test download error handling in generator mode."""
     urls_and_files = {
         "https://example.com/valid.txt": temp_dir / "valid.txt",
         "https://example.com/invalid.txt": temp_dir / "invalid.txt",
@@ -286,7 +285,7 @@ def test_download_file_path_with_error_handling(temp_dir: Path) -> None:
         m.get("https://example.com/invalid.txt", status_code=404)
 
         with patch("dataeng_container_tools.modules.download.download.logger") as mock_logger:
-            results = list(Download.download(urls_and_files, output="file_path"))
+            results = list(Download.download(urls_and_files, output="generator"))
 
             # Should only get results for successful downloads
             assert len(results) == 1
@@ -298,12 +297,43 @@ def test_download_file_path_with_error_handling(temp_dir: Path) -> None:
             mock_logger.exception.assert_called_once()
 
 
+def test_download_futures_with_error_handling(temp_dir: Path) -> None:
+    """Test download error handling in futures mode."""
+    urls_and_files = {
+        "https://example.com/valid.txt": temp_dir / "valid.txt",
+        "https://example.com/invalid.txt": temp_dir / "invalid.txt",
+    }
+
+    with requests_mock.Mocker() as m:
+        m.get("https://example.com/valid.txt", text="Valid content")
+        m.get("https://example.com/invalid.txt", status_code=404)
+
+        with Download.download(urls_and_files, output="futures") as futures:
+            results = []
+            errors = []
+
+            for future in futures:
+                if future.exception():
+                    errors.append(future.exception())
+                else:
+                    results.append(future.result())
+
+            # Should have one successful result and one error
+            assert len(results) == 1
+            assert len(errors) == 1
+
+            url, file_path = results[0]
+            assert url == "https://example.com/valid.txt"
+            assert file_path == temp_dir / "valid.txt"
+            assert isinstance(errors[0], requests.exceptions.HTTPError)
+
+
 def test_download_to_file_invalid_output(temp_dir: Path) -> None:
     """Test download_to_file with invalid output parameter."""
     urls_and_files = {"https://example.com/test.txt": str(temp_dir / "test.txt")}
 
     with pytest.raises(NotImplementedError, match="Output specified 'invalid' has not been implemented"):
-        list(Download.download_to_file(urls_and_files, output="invalid"))  # type: ignore[arg-type]
+        Download.download_to_file(urls_and_files, output="invalid")  # type: ignore[arg-type]
 
 
 def test_download_with_string_paths(temp_dir: Path) -> None:
@@ -333,11 +363,11 @@ def test_download_empty_mapping() -> None:
     result = Download.download({}, output="complete")
     assert result is None
 
-    results = list(Download.download({}, output="file_path"))
+    results = list(Download.download({}, output="generator"))
     assert len(results) == 0
 
-    futures = list(Download.download({}, output="future"))
-    assert len(futures) == 0
+    with Download.download({}, output="futures") as futures:
+        assert len(futures) == 0
 
 
 def test_download_large_chunk_size(temp_dir: Path) -> None:

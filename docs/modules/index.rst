@@ -10,4 +10,5 @@ This section provides detailed information and usage examples for the DE Contain
    secrets-handling
    gcs-operations
    datastore-operations
+   downloader
    container-utils

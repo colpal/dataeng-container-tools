@@ -160,27 +160,23 @@ immediately instead of waiting.
         print(f"Downloaded {url} to {file_path}")
         # Further processing here
 
-Using ``output="futures"`` grants the most flexibility and complexity by returning a tuple of 
-(list of ``concurrent.futures.Future``, shutdown_func(wait=True)). The user will have to manually handle 
-all these futures and then call the ``shutdown_func()`` at the end. 
-See `Future <https://docs.python.org/3/library/concurrent.futures.html#future-objects>`_ 
-and `Executor.shutdown <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Executor.shutdown>`_ for more information.
+Using ``output="futures"`` grants the most flexibility and complexity by returning a context 
+manager that gives a list of ``concurrent.futures.Future`` objects. 
+See `Future <https://docs.python.org/3/library/concurrent.futures.html#future-objects>`_ for more information.
 
 .. code-block:: python
     
     from dataeng_container_tools import Download
     from concurrent.futures import as_completed
 
-    futures, shutdown_func = Download.download({
+    with Download.download({
         "http://example.com/info.txt": "text/info.txt",
         "http://example.com/data.csv": "data/data.csv",
-    }, output="futures")
-
-    for future in as_completed(futures):
-        if future.exception() is not None:
-            print(f"Warning: Future completed with exception: {future.exception()}")
-        else:
-            print(f"Success: Download completed without errors")
-            url, file_path = future.result()
-            print(f"Downloaded {url} to {file_path}")
-    shutdown_func()
+    }, output="futures") as futures:
+        for future in as_completed(futures):
+            if future.exception() is not None:
+                print(f"Warning: Future completed with exception: {future.exception()}")
+            else:
+                print(f"Success: Download completed without errors")
+                url, file_path = future.result()
+                print(f"Downloaded {url} to {file_path}")

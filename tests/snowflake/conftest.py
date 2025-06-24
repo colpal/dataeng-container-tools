@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-pytest_plugins = "fakesnow.fixtures"
-
 
 @pytest.fixture
 def temp_credentials(fakesnow_server: dict) -> Generator[str, None, None]:

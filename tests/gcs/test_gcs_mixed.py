@@ -79,8 +79,9 @@ def test_upload_download_roundtrip_consistency(
         result = gcs_file_io.download(test_uri)
 
         # Verify: Check data consistency
-        assert filename in result
-        downloaded_data = result[filename]
+        expected_key = f"{test_bucket.name}/{filename}"
+        assert expected_key in result
+        downloaded_data = result[expected_key]
         assert isinstance(downloaded_data, pd.DataFrame)
 
         # Data should be identical for all formats now
@@ -111,7 +112,7 @@ def test_data_processing_workflow(
 
     # Test: Download and process data
     downloaded_data = gcs_file_io.download(raw_uri)
-    raw_df = downloaded_data["raw/data.csv"]
+    raw_df = downloaded_data[f"{test_bucket.name}/raw/data.csv"]
 
     # Calculate average score by category
     processed_df = raw_df.groupby("category")["score"].mean().reset_index()
@@ -123,7 +124,7 @@ def test_data_processing_workflow(
 
     # Test: Download final results and save locally
     final_results = gcs_file_io.download(processed_uri)
-    final_df = final_results["processed/summary.parquet"]
+    final_df = final_results[f"{test_bucket.name}/processed/summary.parquet"]
 
     # Save final results to local file
     output_file = temp_dir / "final_summary.parquet"
@@ -195,11 +196,11 @@ def test_batch_file_management(
     assert (temp_dir / "downloaded_readme.md").read_text() == "# Project Documentation\nThis is a test project."
 
     # Verify: Check object downloads
-    assert "data/users.csv" in downloaded_objects
-    assert "data/metrics.parquet" in downloaded_objects
+    assert f"{test_bucket.name}/data/users.csv" in downloaded_objects
+    assert f"{test_bucket.name}/data/metrics.parquet" in downloaded_objects
 
-    downloaded_users = downloaded_objects["data/users.csv"]
-    downloaded_metrics = downloaded_objects["data/metrics.parquet"]
+    downloaded_users = downloaded_objects[f"{test_bucket.name}/data/users.csv"]
+    downloaded_metrics = downloaded_objects[f"{test_bucket.name}/data/metrics.parquet"]
 
     pd.testing.assert_frame_equal(downloaded_users, users_df)
     pd.testing.assert_frame_equal(downloaded_metrics, metrics_df)
@@ -225,7 +226,7 @@ def test_data_format_conversion_workflow(
 
     # Test: Download CSV and re-upload as different formats
     csv_data = gcs_file_io.download(csv_uri)
-    products_df = csv_data["products.csv"]
+    products_df = csv_data[f"{test_bucket.name}/products.csv"]
 
     # Test: Convert to multiple formats
     conversion_uploads = [
@@ -243,9 +244,9 @@ def test_data_format_conversion_workflow(
     all_data = gcs_file_io.download(all_formats)
 
     # Verify: All formats should contain the same data
-    csv_result = all_data["products.csv"]
-    parquet_result = all_data["products.parquet"]
-    excel_result = all_data["products.xlsx"]
+    csv_result = all_data[f"{test_bucket.name}/products.csv"]
+    parquet_result = all_data[f"{test_bucket.name}/products.parquet"]
+    excel_result = all_data[f"{test_bucket.name}/products.xlsx"]
 
     pd.testing.assert_frame_equal(csv_result, source_data)
     pd.testing.assert_frame_equal(parquet_result, source_data)
@@ -278,16 +279,16 @@ def test_wildcard_batch_operations(
 
     # Verify: Check only sales files were downloaded
     assert len(sales_data) == 3
-    assert "reports/sales_2024_01.csv" in sales_data
-    assert "reports/sales_2024_02.csv" in sales_data
-    assert "reports/sales_2024_03.csv" in sales_data
-    assert "reports/inventory_2024_01.csv" not in sales_data
+    assert f"{test_bucket.name}/reports/sales_2024_01.csv" in sales_data
+    assert f"{test_bucket.name}/reports/sales_2024_02.csv" in sales_data
+    assert f"{test_bucket.name}/reports/sales_2024_03.csv" in sales_data
+    assert f"{test_bucket.name}/reports/inventory_2024_01.csv" not in sales_data
 
     # Verify: Check content
     for name in ["sales_2024_01", "sales_2024_02", "sales_2024_03"]:
-        filename = f"reports/{name}.csv"
+        expected_key = f"{test_bucket.name}/reports/{name}.csv"
         expected_data = datasets[name]
-        actual_data = sales_data[filename]
+        actual_data = sales_data[expected_key]
         pd.testing.assert_frame_equal(actual_data, expected_data)
 
 
@@ -312,4 +313,4 @@ def test_error_handling_mixed_operations(
     result = gcs_file_io.download(f"gs://{test_bucket.name}/exists.csv")
 
     # Verify: Confirm file exists
-    assert "exists.csv" in result
+    assert f"{test_bucket.name}/exists.csv" in result

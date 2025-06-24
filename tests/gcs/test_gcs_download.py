@@ -139,8 +139,9 @@ def test_download_to_object_parquet(
     result = gcs_file_io.download_to_object(test_uri)
 
     # Verify: Check the result
-    assert blob_name in result
-    result_data = result[blob_name]
+    expected_key = f"{test_bucket.name}/{blob_name}"
+    assert expected_key in result
+    result_data = result[expected_key]
     assert isinstance(result_data, pd.DataFrame)
     pd.testing.assert_frame_equal(result_data, test_data)
 
@@ -163,8 +164,9 @@ def test_download_to_object_csv(
     result = gcs_file_io.download_to_object(test_uri)
 
     # Verify: Check the result
-    assert blob_name in result
-    result_data = result[blob_name]
+    expected_key = f"{test_bucket.name}/{blob_name}"
+    assert expected_key in result
+    result_data = result[expected_key]
     assert isinstance(result_data, pd.DataFrame)
     pd.testing.assert_frame_equal(result_data, test_data)
 
@@ -191,8 +193,9 @@ def test_download_to_object_xlsx(
     result = gcs_file_io.download_to_object(test_uri)
 
     # Verify: Check the result
-    assert blob_name in result
-    result_data = result[blob_name]
+    expected_key = f"{test_bucket.name}/{blob_name}"
+    assert expected_key in result
+    result_data = result[expected_key]
     assert isinstance(result_data, pd.DataFrame)
     pd.testing.assert_frame_equal(result_data, test_data)
 
@@ -215,8 +218,9 @@ def test_download_to_object_json(
     result = gcs_file_io.download_to_object(test_uri)
 
     # Verify: Check the result
-    assert blob_name in result
-    result_data = result[blob_name]
+    expected_key = f"{test_bucket.name}/{blob_name}"
+    assert expected_key in result
+    result_data = result[expected_key]
     assert isinstance(result_data, pd.DataFrame)
     pd.testing.assert_frame_equal(result_data.reset_index(drop=True), test_data.reset_index(drop=True))
 
@@ -265,8 +269,9 @@ def test_download_mixed_extensions(
     # Verify: Check all results
     assert len(result) == 4
     for filename, expected_data in test_files.items():
-        assert filename in result
-        result_data = result[filename]
+        expected_key = f"{test_bucket.name}/{filename}"
+        assert expected_key in result
+        result_data = result[expected_key]
         assert isinstance(result_data, pd.DataFrame)
         pd.testing.assert_frame_equal(result_data.reset_index(drop=True), expected_data.reset_index(drop=True))
 
@@ -291,8 +296,9 @@ def test_download_unsupported_extension_returns_bytesio(
     # Verify: All should return BytesIO
     assert len(result) == len(unsupported_files)
     for filename in unsupported_files:
-        assert filename in result
-        result_data = result[filename]
+        expected_key = f"{test_bucket.name}/{filename}"
+        assert expected_key in result
+        result_data = result[expected_key]
         assert isinstance(result_data, io.BytesIO)
         assert result_data.getvalue() == test_content
 
@@ -340,15 +346,16 @@ def test_download_with_wildcard(
 
     # Verify: Only CSV files should be downloaded
     assert len(csv_result) == 3  # data1.csv, data2.csv, report.csv
-    assert "data1.csv" in csv_result
-    assert "data2.csv" in csv_result
-    assert "report.csv" in csv_result
-    assert "other.txt" not in csv_result
-    assert "report.bin" not in csv_result
+    assert f"{test_bucket.name}/data1.csv" in csv_result
+    assert f"{test_bucket.name}/data2.csv" in csv_result
+    assert f"{test_bucket.name}/report.csv" in csv_result
+    assert f"{test_bucket.name}/other.txt" not in csv_result
+    assert f"{test_bucket.name}/report.bin" not in csv_result
 
     # Verify CSV content
     for filename, expected_data in csv_files.items():
-        result_data = csv_result[filename]
+        expected_key = f"{test_bucket.name}/{filename}"
+        result_data = csv_result[expected_key]
         assert isinstance(result_data, pd.DataFrame)
         pd.testing.assert_frame_equal(result_data, expected_data)
 
@@ -360,14 +367,18 @@ def test_download_with_wildcard(
     assert len(report_result) == 3  # report.csv, report.parquet, report.bin
 
     # Structured data should be DataFrames
-    assert isinstance(report_result["report.csv"], pd.DataFrame)
-    assert isinstance(report_result["report.parquet"], pd.DataFrame)
-    pd.testing.assert_frame_equal(report_result["report.csv"], test_data)
-    pd.testing.assert_frame_equal(report_result["report.parquet"], test_data)
+    csv_result_data = report_result[f"{test_bucket.name}/report.csv"]
+    parquet_result_data = report_result[f"{test_bucket.name}/report.parquet"]
+    bin_result_data = report_result[f"{test_bucket.name}/report.bin"]
+
+    assert isinstance(csv_result_data, pd.DataFrame)
+    assert isinstance(parquet_result_data, pd.DataFrame)
+    pd.testing.assert_frame_equal(csv_result_data, test_data)
+    pd.testing.assert_frame_equal(parquet_result_data, test_data)
 
     # Binary data should be BytesIO
-    assert isinstance(report_result["report.bin"], io.BytesIO)
-    assert report_result["report.bin"].getvalue() == binary_content
+    assert isinstance(bin_result_data, io.BytesIO)
+    assert bin_result_data.getvalue() == binary_content
 
 
 def test_download_with_dtype_parameter(
@@ -394,8 +405,9 @@ def test_download_with_dtype_parameter(
     result = gcs_file_io.download_to_object(test_uri, dtype=dtype_spec)
 
     # Verify: Check types are preserved
-    assert blob_name in result
-    result_data = result[blob_name]
+    expected_key = f"{test_bucket.name}/{blob_name}"
+    assert expected_key in result
+    result_data = result[expected_key]
     assert isinstance(result_data, pd.DataFrame)
     assert result_data["id"].dtype == "object"  # String type
     assert result_data["value"].dtype == "float64"

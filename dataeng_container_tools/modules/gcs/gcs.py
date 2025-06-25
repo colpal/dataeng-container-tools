@@ -73,6 +73,44 @@ class GCSUriUtils:
         file_path = gcs_uri[gcs_uri.find("/") + 1 :]
         return bucket, file_path
 
+    @staticmethod
+    def build_uris(
+        bucket_names: list[str],
+        paths: list[str],
+        filenames: list[str],
+    ) -> list[str]:
+        """Build GCS URIs from bucket names, paths, and filenames.
+
+        Args:
+            bucket_names: List of bucket names. If only one bucket is provided,
+                it will be used for all files.
+            paths: List of paths within buckets.
+            filenames: List of filenames.
+
+        Returns:
+            List of GCS URIs in format "gs://bucket_name/path/filename".
+
+        Raises:
+            ValueError: If bucket_names length is not 1 or equal to filenames length.
+        """
+        if len(bucket_names) not in (1, len(filenames)):
+            msg = f"bucket_names length ({len(bucket_names)}) must be 1 or equal to filenames length ({len(filenames)})"
+            raise ValueError(msg)
+
+        constant_bucket = len(bucket_names) == 1
+        bucket_name = bucket_names[0] if constant_bucket else ""
+
+        uris = []
+        for pos, filename in enumerate(filenames):
+            if not constant_bucket:
+                bucket_name = bucket_names[pos]
+
+            # Build URI and normalize to handle path separators
+            raw_uri = f"{GCSUriUtils.PREFIX}{bucket_name}/{paths[pos]}/{filename}"
+            uris.append(GCSUriUtils.normalize_uri(raw_uri))
+
+        return uris
+
 
 class GCSFileIO(BaseModule):
     """Uploads and downloads files to/from Google Cloud Storage (GCS).

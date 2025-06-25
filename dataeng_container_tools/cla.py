@@ -17,6 +17,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, final
 
 from . import __version__
+from .modules.gcs.gcs import GCSUriUtils
 from .secrets_manager import SecretLocations
 
 if TYPE_CHECKING:
@@ -208,7 +209,6 @@ class CommandLineArguments:
         *,
         secret_locations: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
         input_files: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
-        input_dtypes: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
         output_files: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
         identifying_tags: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
         description: str | None = None,
@@ -222,7 +222,6 @@ class CommandLineArguments:
             secret_locations: Determines if secret locations are required, optional,
                 or unused.
             input_files: Determines if input files are required, optional, or unused.
-            input_dtypes: Determines if input data types are required, optional, or unused.
             output_files: Determines if output files are required, optional, or unused.
             identifying_tags: Determines if identifying tags are required, optional,
                 or unused.
@@ -237,7 +236,6 @@ class CommandLineArguments:
         self.__custom_inputs = custom_inputs
         self.__secret_locations = secret_locations
         self.__input_files = input_files
-        self.__input_dtypes = input_dtypes
         self.__output_files = output_files
         self.__identifying_tags = identifying_tags
         self.__description = description
@@ -307,22 +305,6 @@ class CommandLineArguments:
                 nargs="+",
                 help="Filenames to read file from.",
             )
-            parser.add_argument(
-                "--input_delimiters",
-                type=str,
-                required=False,
-                nargs="+",
-                help="Delimiters for input files",
-            )
-
-            if self.__input_dtypes.value is not None:
-                parser.add_argument(
-                    "--input_dtypes",
-                    type=json.loads,
-                    required=self.__input_dtypes.value,
-                    nargs="+",
-                    help="JSON dictionaries of (column: type) pairs to cast columns to",
-                )
 
         if self.__output_files.value is not None:
             parser.add_argument(
@@ -345,13 +327,6 @@ class CommandLineArguments:
                 required=self.__output_files.value,
                 nargs="+",
                 help="Filename to write file to.",
-            )
-            parser.add_argument(
-                "--output_delimiters",
-                type=str,
-                required=False,
-                nargs="+",
-                help="Delimiters for output files",
             )
 
         if self.__secret_locations.value is not None:
@@ -408,16 +383,6 @@ class CommandLineArguments:
         """
         return self.__args
 
-    def get_input_dtypes(self) -> ...:
-        """Retrieve the input dtypes passed in through the command line.
-
-        Returns:
-            None if dtypes were not asked for in initialization or the loaded JSON
-            object passed to input_dtypes through the command line otherwise.
-
-        """
-        return self.__args.input_dtypes
-
     def get_input_uris(self) -> list[str]:
         """Retrieve the input URIs passed in through the command line.
 
@@ -428,23 +393,12 @@ class CommandLineArguments:
         """
         if not self.__input_files:
             return []
-        constant_bucket = False
-        bucket_name = ""
-        output: list[str] = []
-        if len(self.__args.input_bucket_names) == 1:
-            constant_bucket = True
-            bucket_name = self.__args.input_bucket_names[0]
-        for pos, filename in enumerate(self.__args.input_filenames):
-            if not constant_bucket:
-                bucket_name = self.__args.input_bucket_names[pos]
-            prefix = r"gs://"
-            uri_body = (
-                f"{bucket_name}/{self.__args.input_paths[pos]}/{filename}".replace("/ /", "/")
-                .replace("/./", "/")
-                .replace("//", "/")
-            )
-            output.append(prefix + uri_body)
-        return output
+
+        return GCSUriUtils.build_uris(
+            bucket_names=self.__args.input_bucket_names,
+            paths=self.__args.input_paths,
+            filenames=self.__args.input_filenames,
+        )
 
     def get_output_uris(self) -> list[str]:
         """Retrieve the output URIs passed in through the command line.
@@ -456,20 +410,9 @@ class CommandLineArguments:
         """
         if not self.__output_files:
             return []
-        constant_bucket = False
-        bucket_name = ""
-        output: list[str] = []
-        if len(self.__args.output_bucket_names) == 1:
-            constant_bucket = True
-            bucket_name = self.__args.output_bucket_names[0]
-        for pos, filename in enumerate(self.__args.output_filenames):
-            if not constant_bucket:
-                bucket_name = self.__args.output_bucket_names[pos]
-            prefix = r"gs://"
-            uri_body = (
-                f"{bucket_name}/{self.__args.output_paths[pos]}/{filename}".replace("/ /", "/")
-                .replace("/./", "/")
-                .replace("//", "/")
-            )
-            output.append(prefix + uri_body)
-        return output
+
+        return GCSUriUtils.build_uris(
+            bucket_names=self.__args.output_bucket_names,
+            paths=self.__args.output_paths,
+            filenames=self.__args.output_filenames,
+        )

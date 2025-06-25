@@ -1,6 +1,5 @@
 """Tests for the GCS download functionality."""
 
-import contextlib
 import io
 import tempfile
 from collections.abc import Generator
@@ -33,17 +32,15 @@ def test_bucket(gcs_client: storage.Client) -> Generator[storage.Bucket, None, N
     bucket = gcs_client.bucket(bucket_name)
 
     # Create bucket if it doesn't exist
-    with contextlib.suppress(Exception):
-        bucket.create()
+    bucket.create()
 
     yield bucket
 
     # Cleanup: delete all blobs in bucket
-    with contextlib.suppress(Exception):
-        blobs = list(bucket.list_blobs())
-        for blob in blobs:
-            blob.delete()
-        bucket.delete()
+    blobs = list(bucket.list_blobs())
+    for blob in blobs:
+        blob.delete()
+    bucket.delete()
 
 
 @pytest.fixture

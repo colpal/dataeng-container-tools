@@ -80,7 +80,7 @@ class Snowflake(BaseModule):
         private_key = sf_creds.get("rsa_private_key")
         private_key_bytes = (
             serialization.load_pem_private_key(
-                private_key,
+                private_key.encode("utf-8"),
                 password=None,
                 backend=default_backend(),
             ).private_bytes(

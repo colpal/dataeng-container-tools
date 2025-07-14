@@ -15,6 +15,10 @@ coverage.*
 *.cover
 htmlcov
 
+# Sphinx Build
+docs/build
+docs/autoapi
+
 # macOS generated files
 .DS_Store
 
@@ -35,3 +39,4 @@ htmlcov
 .ruff_cache
 uv.lock
 .mypy_cache
+*.env

@@ -14,7 +14,6 @@ release = version
 
 # General configuration
 extensions = [
-    "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "autoapi.extension",
@@ -22,6 +21,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_togglebutton",
     "sphinx_tabs.tabs",
+    "sphinx.ext.viewcode",  # Must be kept last: https://github.com/readthedocs/sphinx-autoapi/issues/422
 ]
 
 templates_path = ["_templates"]

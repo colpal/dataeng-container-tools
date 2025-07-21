@@ -5,7 +5,6 @@ This module can connect to a Snowflake table and execute a custom query.
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from cryptography.hazmat.backends import default_backend
@@ -18,8 +17,6 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     from snowflake.connector.connection import SnowflakeConnection
-
-logger = logging.getLogger("Container Tools")
 
 
 class Snowflake(BaseModule):

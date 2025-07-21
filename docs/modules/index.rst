@@ -12,3 +12,4 @@ This section provides detailed information and usage examples for the DE Contain
    datastore-operations
    downloader
    container-utils
+   snowflake

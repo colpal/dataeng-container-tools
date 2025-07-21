@@ -121,8 +121,8 @@ class GCSFileIO(BaseModule):
     common GCS operations.
 
     Attributes:
-        client (google.cloud.storage.Client): The Google Cloud Storage client instance.
-        local (bool): A boolean indicating if the module is in local-only mode.
+        client: The Google Cloud Storage client instance.
+        local: A boolean indicating if the module is in local-only mode.
             If True, no actual GCS operations are performed.
 
     Examples:
@@ -151,7 +151,7 @@ class GCSFileIO(BaseModule):
 
     def __init__(
         self,
-        gcs_secret_location: str | Path | None = None,
+        gcs_secret_location: str | os.PathLike[str] | None = None,
         *,
         local: bool = False,
         use_cla_fallback: bool = True,
@@ -456,30 +456,22 @@ class GCSFileIO(BaseModule):
     @overload
     def upload(  # File to URI
         self,
-        src_dst: URIToPath | Iterable[URIToPath],
+        src_dst: PathToURI | Iterable[PathToURI],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
 
     @overload
-    def upload(  # Object to URI
+    def upload(  # Object to URI or Batch
         self,
         src_dst: ObjectToURI | Iterable[ObjectToURI],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
     ) -> None: ...
 
-    @overload
-    def upload(  # Batch
-        self,
-        src_dst: Iterable[URIToPath | ObjectToURI],
-        metadata: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
-    ) -> None: ...
-
     def upload(
         self,
-        src_dst: URIToPath | ObjectToURI | Iterable[URIToPath | ObjectToURI],
+        src_dst: PathToURI | ObjectToURI | Iterable[PathToURI | ObjectToURI],
         metadata: dict | None = None,
         **kwargs: Any,  # Use ParamSpec in future
     ) -> None:
@@ -499,7 +491,7 @@ class GCSFileIO(BaseModule):
 
         Args:
             src_dst:
-                - File Uploads: A URIToPath which is a tuple (source local path, destination uri).
+                - File Uploads: A PathToURI which is a tuple (source local path, destination uri).
                   Example: `("local_data.csv", "gs://bucket/remote_data.csv")`
                 - Object Uploads: An ObjectToURI which is a tuple (source object, destination uri).
                   Supported object types depend on the file extension of the `gcs_uri`
@@ -568,7 +560,7 @@ class GCSFileIO(BaseModule):
 
     def upload_file(
         self,
-        src_dst: Iterable[tuple[str | Path, str]],
+        src_dst: Iterable[PathToURI],
         metadata: dict | None = None,
     ) -> None:
         """Uploads local file(s) to GCS.

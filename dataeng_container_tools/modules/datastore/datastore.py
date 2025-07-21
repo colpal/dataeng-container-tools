@@ -16,8 +16,6 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from google.cloud import datastore
 
 logger = logging.getLogger("Container Tools")
@@ -49,8 +47,8 @@ class Datastore(BaseModule):
     def __init__(
         self,
         task_kind: str,
-        gcp_secret_location: str | Path | None = None,
         *,
+        gcp_secret_location: str | os.PathLike[str] | None = None,
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
     ) -> None:

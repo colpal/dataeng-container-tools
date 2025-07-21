@@ -5,9 +5,12 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, ClassVar, Final, final
+from typing import TYPE_CHECKING, Any, ClassVar, Final, final
 
 from .safe_textio import SafeTextIO
+
+if TYPE_CHECKING:
+    import os
 
 logger = logging.getLogger("Container Tools")
 
@@ -31,7 +34,7 @@ class SecretManager:
     secrets: ClassVar[dict[str, str | dict]] = {}
 
     @classmethod
-    def parse_secret(cls, file: str | Path, *, update_bad_words: bool = True) -> str | dict | None:
+    def parse_secret(cls, file: str | os.PathLike[str], *, update_bad_words: bool = True) -> str | dict | None:
         """Parses the content of a secret file and returns it as a string or dictionary.
 
         This method reads the content of the file specified by the given file path.
@@ -88,7 +91,7 @@ class SecretManager:
         return content
 
     @classmethod
-    def process_secret_folder(cls, folder: str | Path = DEFAULT_SECRET_FOLDER) -> None:
+    def process_secret_folder(cls, folder: str | os.PathLike[str] = DEFAULT_SECRET_FOLDER) -> None:
         """Process all secret files in the given folder.
 
         This method recursively processes all files in the specified folder,

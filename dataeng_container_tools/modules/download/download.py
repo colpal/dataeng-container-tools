@@ -112,7 +112,7 @@ class Download(BaseModule):
     @staticmethod
     @overload
     def download(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         *,
         headers: dict[str, str] | None = None,
         max_workers: int = DEFAULT_MAX_WORKERS,
@@ -126,7 +126,7 @@ class Download(BaseModule):
     @staticmethod
     @overload
     def download(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         *,
         headers: dict[str, str] | None = None,
         max_workers: int = DEFAULT_MAX_WORKERS,
@@ -140,7 +140,7 @@ class Download(BaseModule):
     @staticmethod
     @overload
     def download(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         *,
         headers: dict[str, str] | None = None,
         max_workers: int = DEFAULT_MAX_WORKERS,
@@ -155,7 +155,7 @@ class Download(BaseModule):
     @staticmethod
     @overload
     def download(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         *,
         headers: dict[str, str] | None = None,
         max_workers: int = DEFAULT_MAX_WORKERS,
@@ -168,7 +168,7 @@ class Download(BaseModule):
 
     @staticmethod
     def download(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         **kwargs: Any,
     ) -> None | Generator | _ExecutorContext:
         r"""Downloads files from a mapping of URLs to local file paths.
@@ -246,7 +246,7 @@ class Download(BaseModule):
 
     @staticmethod
     def download_to_file(
-        urls_to_files: Mapping[str, str | Path],
+        urls_to_files: Mapping[str, str | os.PathLike[str]],
         *,
         headers: dict[str, str] | None = None,
         max_workers: int = DEFAULT_MAX_WORKERS,

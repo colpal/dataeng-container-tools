@@ -5,7 +5,6 @@ This module can connect to a Snowflake table and execute a custom query.
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from cryptography.hazmat.backends import default_backend
@@ -14,9 +13,10 @@ from cryptography.hazmat.primitives import serialization
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
 if TYPE_CHECKING:
-    from snowflake.connector.connection import SnowflakeConnection
+    import os
+    from types import TracebackType
 
-logger = logging.getLogger("Container Tools")
+    from snowflake.connector.connection import SnowflakeConnection
 
 
 class Snowflake(BaseModule):
@@ -25,13 +25,11 @@ class Snowflake(BaseModule):
     This class creates a connection to a snowflake table and executes custom queries entered.
 
     Attributes:
-        sf_secret_location: Path to vault secrets.
         role: snowflake role needed for connection
         database: snowflake database the user wants to connect to
         schema: snowflake schema the user wants to connect to
         warehouse: snowflake warehouse the user wants to connect to
         account: snowflake account used for connection
-        query_tag: tag of query performed
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
@@ -44,9 +42,8 @@ class Snowflake(BaseModule):
         schema: str,
         warehouse: str,
         account: str,
-        query_tag: str,
-        sf_secret_location: str,
         *,
+        sf_secret_location: str | os.PathLike[str] | None = None,
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
         **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
@@ -74,7 +71,6 @@ class Snowflake(BaseModule):
         self.database = database
         self.schema = schema
         self.role = role
-        self.query_tag = query_tag
 
         # Handle both password and private key authentication
         private_key = sf_creds.get("rsa_private_key")
@@ -113,3 +109,16 @@ class Snowflake(BaseModule):
         finally:
             cursor.close()
         return result
+
+    def __enter__(self) -> Snowflake:  # noqa: PYI034
+        """Context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Context manager wrapper for closing Snowflake."""
+        self.ctx.__exit__(exc_type, exc_val, exc_tb)

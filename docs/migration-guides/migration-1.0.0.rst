@@ -12,7 +12,7 @@ Rename
 
 The following files, classes, functions have been renamed. References in this page will use the new names:
 
-- ``cla.py``
+- ``cla.py`` (import is ``from dataeng_container_tools import {ClassName}``)
    - Class: ``custom_command_line_argument -> CustomCommandLineArgument``
    - Class: ``command_line_argument_type -> CommandLineArgumentType``
    - Class: ``command_line_secret -> CommandLineSecret``
@@ -20,12 +20,12 @@ The following files, classes, functions have been renamed. References in this pa
       - Function: ``cla.CommandLineArguments.get_secret_locations -> secrets_manager.SecretLocations`` (file change, function to class)
       - Function: ``cla.CommandLineArguments.get_secrets -> secrets_manager.SecretManager.get_secrets`` (file change)
 
-- ``gcs.py -> modules/gcs/gcs.py`` (relocation, imports does not change)
-   - Class: ``gcs_file_io -> GCSFileIO``
+- ``gcs.py -> modules/gcs/gcs.py``
+   - Class: ``gcs_file_io -> GCSFileIO`` (import is ``from dataeng_container_tools import GCSFileIO``)
       - Function: ``GCSFileIO.__get_parts (instancemethod) -> GCSUriUtils.get_components (staticmethod)``
 
 - ``db.py -> modules/datastore/datastore.py``
-   - Class: ``Db -> Datastore``
+   - Class: ``Db -> Datastore`` (import is ``from dataeng_container_tools import Datastore``)
 
 - ``safe_stdout.py -> safe_textio.py``
    - Class: ``safe_stdout -> SafeTextIO``

@@ -9,9 +9,12 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from dataeng_container_tools.secrets_manager import SecretLocations, SecretManager
+
+if TYPE_CHECKING:
+    import os
 
 logger = logging.getLogger("Container Tools")
 
@@ -144,9 +147,9 @@ class BaseModuleUtilities:
 
     @staticmethod
     def parse_secret_with_fallback(
-        secret_location: str | Path | None = None,
+        secret_location: str | os.PathLike[str] | None = None,
         fallback_secret_key: str | None = None,
-        fallback_secret_file: str | Path | None = None,
+        fallback_secret_file: str | os.PathLike[str] | None = None,
     ) -> str | dict | None:
         """Attempts to parse a secret with multiple fallback options.
 

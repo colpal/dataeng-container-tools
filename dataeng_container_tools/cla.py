@@ -83,7 +83,7 @@ class CustomCommandLineArgument:
         const: Any = ...,  # noqa: ANN401
         default: Any = ...,  # noqa: ANN401
         type: argparse._ActionType = ...,  # noqa: A002
-        choices: Iterable[argparse._T] | None = ...,
+        choices: Iterable[argparse._T] | None = None,
         required: bool = ...,
         help: str | None = ...,  # noqa: A002
         metavar: str | tuple[str, ...] | None = ...,

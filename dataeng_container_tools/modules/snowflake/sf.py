@@ -22,14 +22,14 @@ if TYPE_CHECKING:
 class Snowflake(BaseModule):
     """Handles Snowflake operations.
 
-    This class creates a connection to a snowflake table and executes custom queries entered.
+    This class creates a connection to a Snowflake table and executes custom queries entered.
 
     Attributes:
-        role: snowflake role needed for connection
-        database: snowflake database the user wants to connect to
-        schema: snowflake schema the user wants to connect to
-        warehouse: snowflake warehouse the user wants to connect to
-        account: snowflake account used for connection
+        account: Snowflake account used for connection
+        role: Snowflake role needed for connection
+        database: Snowflake database the user wants to connect to
+        schema: Snowflake schema the user wants to connect to
+        warehouse: sSnowflake warehouse the user wants to connect to
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
@@ -37,11 +37,11 @@ class Snowflake(BaseModule):
 
     def __init__(
         self,
-        role: str,
+        account: str,
         database: str,
         schema: str,
         warehouse: str,
-        account: str,
+        role: str,
         *,
         sf_secret_location: str | os.PathLike[str] | None = None,
         use_cla_fallback: bool = True,
@@ -67,9 +67,9 @@ class Snowflake(BaseModule):
 
         self.user = sf_creds["username"]
         self.account = account
-        self.warehouse = warehouse
         self.database = database
         self.schema = schema
+        self.warehouse = warehouse
         self.role = role
 
         # Handle both password and private key authentication
@@ -93,9 +93,9 @@ class Snowflake(BaseModule):
             password=sf_creds.get("password"),
             private_key=private_key_bytes,
             account=account,
-            warehouse=warehouse,
             database=database,
             schema=schema,
+            warehouse=warehouse,
             role=role,
             **kwargs,
         )

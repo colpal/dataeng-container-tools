@@ -56,6 +56,7 @@ dev = [
     "sphinx-tabs==3.4.7",
     "sphinxcontrib-napoleon==0.7",
     "esbonio==0.16.5",
+    "sphinx-multiversion==0.2.4",
 ]
 
 [build-system]

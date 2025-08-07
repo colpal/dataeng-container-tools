@@ -15,6 +15,7 @@ release = version
 # General configuration
 extensions = [
     "sphinx.ext.napoleon",
+    "sphinx_multiversion",
     "sphinx.ext.intersphinx",
     "autoapi.extension",
     "myst_parser",
@@ -24,7 +25,6 @@ extensions = [
     "sphinx.ext.viewcode",  # Must be kept last: https://github.com/readthedocs/sphinx-autoapi/issues/422
 ]
 
-templates_path = ["_templates"]
 exclude_patterns = []
 source_suffix = [".rst", ".md"]
 master_doc = "index"
@@ -32,6 +32,7 @@ master_doc = "index"
 # HTML output configuration
 html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 html_title = f"DE Container Tools {version}"
 html_logo = "_static/logo-light.svg"
 html_favicon = "_static/favicon.ico"
@@ -40,13 +41,26 @@ html_theme_options = {
     "logo": {
         "image_dark": "_static/logo-dark.svg",
     },
+    "use_edit_page_button": True,
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "repository_url": "https://github.com/colpal/dataeng-container-tools",
+    "repository_branch": "v1/docs",
+    "path_to_docs": "docs/src/",
+    "switcher": {
+        "json_url": "_static/switcher.json",
+        "version_match": version,
+    },
 }
+
+# Templates
+templates_path = ["_templates"]
 
 # Extension configuration
 suppress_warnings = ["autoapi.python_import_resolution"]
 tls_verify = False
 
-autoapi_dirs = ["../dataeng_container_tools"]
+autoapi_dirs = ["../../dataeng_container_tools"]
 autoapi_options = [
     "members",
     "inherited-members",
@@ -86,3 +100,22 @@ myst_enable_extensions = [
     "deflist",
 ]
 myst_heading_anchors = 3
+
+html_sidebars = {
+    "**": [
+        "navbar-logo.html",
+        "search-button-field.html",
+        "version-switcher.html",
+        "sbt-sidebar-nav.html",
+    ],
+}
+
+# Sphinx-multiversion configuration
+smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"
+smv_branch_whitelist = r"^(v1/docs)$"
+smv_remote_whitelist = r"^origin$"
+smv_released_pattern = r"^refs/tags/.*$"
+smv_outputdir_format = "{ref.name}"
+
+smv_latest_version = "v1.0.1"
+smv_rename_latest_version = "v1.0.1 (latest)"

@@ -16,8 +16,9 @@ coverage.*
 htmlcov
 
 # Sphinx Build
-docs/build
-docs/autoapi
+docs/src/build*
+docs/src/autoapi
+docs/src/_static/switcher.json
 
 # macOS generated files
 .DS_Store

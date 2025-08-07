@@ -1,0 +1,21 @@
+{% if versions %}
+<div class="version-selector">
+    <label for="version-select">Version:</label>
+    <select id="version-select" onchange="window.location.href=this.value">
+        {%- if versions.branches %}
+        <optgroup label="Branches">
+            {%- for item in versions.branches %}
+            <option value="{{ item.url }}" {% if item == current_version %}selected{% endif %}>{{ item.name }}</option>
+            {%- endfor %}
+        </optgroup>
+        {%- endif %}
+        {%- if versions.tags %}
+        <optgroup label="Releases">
+            {%- for item in versions.tags|reverse %}
+            <option value="{{ item.url }}" {% if item == current_version %}selected{% endif %}>{{ item.name }}</option>
+            {%- endfor %}
+        </optgroup>
+        {%- endif %}
+    </select>
+</div>
+{% endif %}

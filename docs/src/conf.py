@@ -48,7 +48,7 @@ html_theme_options = {
     "repository_branch": "v1/docs",
     "path_to_docs": "docs/src/",
     "switcher": {
-        "json_url": "_static/switcher.json",
+        "json_url": "../latest/_static/switcher.json",
         "version_match": version,
     },
 }
@@ -116,6 +116,3 @@ smv_branch_whitelist = r"^(v1/docs)$"
 smv_remote_whitelist = r"^origin$"
 smv_released_pattern = r"^refs/tags/.*$"
 smv_outputdir_format = "{ref.name}"
-
-smv_latest_version = "v1.0.1"
-smv_rename_latest_version = "v1.0.1 (latest)"

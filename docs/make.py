@@ -31,10 +31,10 @@ def clean_build_dir(build_dir: Path) -> None:
             logger.exception("Error removing build directory")
 
 
-def build_html_docs(build_dir: Path) -> bool:
+def build_html_docs(build_dir: Path, *, latest: bool = False) -> bool:
     """Build HTML documentation."""
     try:
-        cmd = ["sphinx-build", "-b", "html", ".", str(build_dir / "html")]
+        cmd = ["sphinx-build", "-b", "html", ".", str(build_dir / "html" / ("latest" if latest else ""))]
         subprocess.run(cmd, cwd=DOCS_PATH, check=True)
         logger.info("HTML documentation built successfully")
     except subprocess.CalledProcessError:
@@ -50,7 +50,7 @@ def build_multiversion_docs(build_dir: Path) -> bool:
         subprocess.run(cmd, cwd=DOCS_PATH, check=True)
         logger.info("Multi-version documentation built successfully")
 
-        update_switcher_json()
+        build_html_docs(build_dir, latest=True)
 
     except subprocess.CalledProcessError:
         logger.exception("Error building multi-version documentation")
@@ -65,19 +65,19 @@ def update_switcher_json() -> None:
     # Basic switcher configuration - can be enhanced to dynamically detect versions
     switcher_data = [
         {
-            "name": "v1.0.0",
-            "version": "v1.0.0",
-            "url": "../../v1.0.0/",
+            "name": "latest",
+            "version": "latest",
+            "url": "/latest/",
         },
         {
             "name": "v1.0.1",
             "version": "v1.0.1",
-            "url": "../../v1.0.1/",
+            "url": "/v1.0.1/",
         },
         {
-            "name": "v1.0.1",
-            "version": "latest",
-            "url": "../../v1.0.1/",
+            "name": "v1.0.0",
+            "version": "v1.0.0",
+            "url": "/v1.0.0/",
         },
     ]
 
@@ -189,6 +189,8 @@ def main() -> None:
 
     # Clean the build directory before building
     clean_build_dir(build_dir)
+
+    update_switcher_json()
 
     # Build HTML docs if requested
     html_success = None

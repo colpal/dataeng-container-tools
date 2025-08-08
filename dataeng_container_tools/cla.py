@@ -67,7 +67,7 @@ class CustomCommandLineArgument:
             ...     help="The number of items to process in a batch."
             ... )
             >>> # This can then be passed to CommandLineArguments:
-            >>> # cla = CommandLineArguments(custom_inputs=[batch_size_arg])
+            >>> # cla = CommandLineArguments(custom_args=[batch_size_arg])
             >>> # args = cla.get_arguments()
             >>> # print(args.batch_size) # Access the parsed value
     """
@@ -205,7 +205,7 @@ class CommandLineArguments:
 
     def __init__(
         self,
-        custom_inputs: list[CustomCommandLineArgument] | None = None,
+        custom_args: list[CustomCommandLineArgument] | None = None,
         *,
         secret_locations: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
         input_files: CommandLineArgumentType = CommandLineArgumentType.UNUSED,
@@ -218,7 +218,7 @@ class CommandLineArguments:
         """Initialize CommandLineArguments with desired configuration.
 
         Args:
-            custom_inputs: List of custom command line arguments.
+            custom_args: List of custom command line arguments.
             secret_locations: Determines if secret locations are required, optional,
                 or unused.
             input_files: Determines if input files are required, optional, or unused.
@@ -230,10 +230,10 @@ class CommandLineArguments:
             parse_known_args: Whether to parse known arguments only.
 
         """
-        if custom_inputs is None:
-            custom_inputs = []
+        if custom_args is None:
+            custom_args = []
 
-        self.__custom_inputs = custom_inputs
+        self.__custom_args = custom_args
         self.__secret_locations = secret_locations
         self.__input_files = input_files
         self.__output_files = output_files
@@ -243,8 +243,8 @@ class CommandLineArguments:
 
         self.__add_container_args(parser)
 
-        if custom_inputs:
-            for item in custom_inputs:
+        if custom_args:
+            for item in custom_args:
                 arg_name = "--" + item.name
                 arg_kwargs = {
                     attr: getattr(item, attr)

@@ -144,11 +144,6 @@ class SecretLocations(dict[str, str]):
     A singleton class that manages secret file locations. This class extends dict functionality
     with attribute access for common secret types like GCS, SF (Snowflake), and DS (Datastore).
 
-    Attributes:
-        GCS (str): Default location for GCP storage secret.
-        SF (str): Default location for Snowflake secret.
-        DS (str): Default location for Datastore secret.
-
     Examples:
         Basic usage:
             >>> SecretLocations().update({"api_key": "/vault/secrets/api_key"})
@@ -164,11 +159,6 @@ class SecretLocations(dict[str, str]):
             >>> SecretLocations().SF   # Access Snowflake secret location
     """
 
-    # Add type hints for common attributes
-    GCS: str
-    SF: str
-    DS: str
-
     _instance: ClassVar[SecretLocations | None] = None
 
     def __new__(cls, *_args: ..., **_kwargs: ...) -> SecretLocations:
@@ -182,6 +172,18 @@ class SecretLocations(dict[str, str]):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
+
+    def __init__(self) -> None:
+        """Initialize the instance attributes.
+
+        Attributes:
+            GCS (str): Default location for GCP storage secret.
+            SF (str): Default location for Snowflake secret.
+            DS (str): Default location for Datastore secret.
+        """
+        self.GCS: str = ""
+        self.SF: str = ""
+        self.DS: str = ""
 
     def update(self, new_secret_locations: dict[str, str], *, set_attr: bool = False) -> None:  # type: ignore  # noqa: PGH003
         """Updates the secret locations with new values and optionally sets them as attributes.

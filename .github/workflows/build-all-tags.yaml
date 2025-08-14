@@ -1,0 +1,72 @@
+name: Build All Package Tags
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-all-tags:
+    runs-on: [self-hosted, org]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch all tags
+        shell: bash
+        run: git fetch --tags
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.9"
+          python-version: "3.13"
+          activate-environment: true
+          enable-cache: false
+
+      - name: Install build tools
+        shell: bash
+        run: |
+          uv pip install twine
+
+      - id: oidc
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.VAULT_IAP_SA }}
+          id_token_audience: ${{ secrets.VAULT_IAP_CLIENT_ID }}
+          token_format: id_token
+          id_token_include_email: true
+
+      - name: Retrieve secrets from Vault
+        id: vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: jwt
+          role: ${{ github.event.repository.name }}
+          exportEnv: false
+          extraHeaders: "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}"
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }} | password;
+
+      - name: Build and release Python package for each tag
+        shell: bash
+        run: |
+          for tag in $(git tag | grep '^v' | sort -V); do
+            echo "Processing $tag"
+
+            # Create a clean directory for this tag
+            WORK_DIR="build_${tag}"
+            rm -rf "$WORK_DIR"
+            git clone . "$WORK_DIR"
+            cd "$WORK_DIR"
+            git checkout "$tag"
+
+            # Build the Python package
+            uv build
+
+            # Push to artifact registry
+            twine upload --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }} dist/* --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} --password "${{ steps.vault.outputs.password }}"
+
+            # Clean up
+            cd ..
+            rm -rf "$WORK_DIR"
+          done

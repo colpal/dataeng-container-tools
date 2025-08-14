@@ -2,6 +2,7 @@ name: Build All Package Tags
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build-all-tags:

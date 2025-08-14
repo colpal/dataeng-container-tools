@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-all-tags:
-    runs-on: [self-hosted, org]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

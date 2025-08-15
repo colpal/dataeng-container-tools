@@ -70,11 +70,11 @@ jobs:
 
             # Push to artifact registry
             twine upload dist/* \
-              --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }}
+              --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }} \
               --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} \
               --password "${{ steps.vault.outputs.password }}" \
               --non-interactive \
-              --disable-progress-bar \
+              --disable-progress-bar
 
             # Clean up
             cd ..

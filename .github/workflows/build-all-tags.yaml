@@ -60,18 +60,22 @@ jobs:
 
             # Create a clean directory for this tag
             WORK_DIR="build_${tag}"
-            rm -rf "$WORK_DIR"
-            git clone . "$WORK_DIR"
+            rm -rf "$WORK_DIR" 2>/dev/null || true
+            git clone . "$WORK_DIR" --quiet
             cd "$WORK_DIR"
-            git checkout "$tag"
+            git checkout "$tag" --quiet
 
             # Build the Python package
-            uv build
+            uv build --quiet
 
             # Push to artifact registry
-            twine upload --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }} dist/* --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} --password "${{ steps.vault.outputs.password }}"
+            twine upload dist/* \
+              --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }}
+              --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} \
+              --password "${{ steps.vault.outputs.password }}" \
+              --disable-progress-bar \
 
             # Clean up
             cd ..
-            rm -rf "$WORK_DIR"
+            rm -rf "$WORK_DIR" 2>/dev/null || true
           done

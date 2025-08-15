@@ -74,7 +74,8 @@ jobs:
               --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} \
               --password "${{ steps.vault.outputs.password }}" \
               --non-interactive \
-              --disable-progress-bar
+              --disable-progress-bar \
+              --skip-existing
 
             # Clean up
             cd ..

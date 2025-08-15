@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build-all-tags:
     runs-on: ubuntu-latest

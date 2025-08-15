@@ -64,6 +64,15 @@ jobs:
             git clone . "$WORK_DIR" --quiet
             cd "$WORK_DIR"
             git checkout "$tag" --quiet
+            # Old versions have a dist folder with all packages
+            rm -rf dist 2>/dev/null || true
+
+            # Cleanup legacy projects
+            if [ -f "setup.py" ]; then
+              VERSION="${tag#v}"
+              sed -i "s/version=['\"][^'\"]*['\"]/version=\"$VERSION\"/" setup.py
+              sed -i 's/name="dataEng-container-tools"/name="dataeng-container-tools"/' setup.py
+            fi
 
             # Build the Python package
             uv build --quiet

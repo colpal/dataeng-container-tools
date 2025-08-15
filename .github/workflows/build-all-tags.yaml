@@ -73,6 +73,7 @@ jobs:
               --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }}
               --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} \
               --password "${{ steps.vault.outputs.password }}" \
+              --non-interactive \
               --disable-progress-bar \
 
             # Clean up

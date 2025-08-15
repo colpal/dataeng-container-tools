@@ -18,7 +18,7 @@ def main() -> None:
         required=False,
     )
 
-    CommandLineArguments(custom_inputs=[some_arg, some_arg2])
+    CommandLineArguments(custom_args=[some_arg, some_arg2])
 
 
 main()

@@ -34,7 +34,13 @@ class SecretManager:
     secrets: ClassVar[dict[str, str | dict]] = {}
 
     @classmethod
-    def parse_secret(cls, file: str | os.PathLike[str], *, update_bad_words: bool = True) -> str | dict | None:
+    def parse_secret(
+        cls,
+        file: str | os.PathLike[str],
+        *,
+        update_bad_words: bool = True,
+        verbose: bool = True,
+    ) -> str | dict | None:
         """Parses the content of a secret file and returns it as a string or dictionary.
 
         This method reads the content of the file specified by the given file path.
@@ -44,6 +50,8 @@ class SecretManager:
         Args:
             file: The path to the secret file to be parsed.
             update_bad_words: Whether to also update the list of bad words for SafeTextIO.
+                Defaults to True.
+            verbose: Whether to log exceptions encountered during file reading or JSON parsing.
                 Defaults to True.
 
         Returns:
@@ -71,7 +79,8 @@ class SecretManager:
         try:
             content: str = file_path.read_text().strip()
         except OSError:
-            logger.exception("File %s cannot be read.", file_path.as_posix())
+            if verbose:
+                logger.exception("File %s cannot be read.", file_path.as_posix())
             return None
 
         # Try optimistically parsing as JSON
@@ -79,7 +88,8 @@ class SecretManager:
             if content.startswith("{") and content.endswith("}"):
                 content = json.loads(content)  # JSON objects are always considered dicts according to JSONDecoder class
         except json.JSONDecodeError:
-            logger.exception("File %s is not a properly formatted JSON file.", file_path.as_posix())
+            if verbose:
+                logger.exception("File %s is not a properly formatted JSON file.", file_path.as_posix())
 
         # Add secrets to variables and bad words
         cls.secrets[file_path.as_posix()] = content
@@ -147,6 +157,7 @@ class SecretLocations(dict[str, str]):
     Examples:
         Basic usage:
             >>> SecretLocations().update({"api_key": "/vault/secrets/api_key"})
+            >>> # Use anywhere once defined
             >>> foo_bar(SecretLocations()["api_key"])
 
         Alternate syntax:

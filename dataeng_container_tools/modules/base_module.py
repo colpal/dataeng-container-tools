@@ -147,39 +147,27 @@ class BaseModuleUtilities:
 
     @staticmethod
     def parse_secret_with_fallback(
-        secret_location: str | os.PathLike[str] | None = None,
-        fallback_secret_key: str | None = None,
-        fallback_secret_file: str | os.PathLike[str] | None = None,
+        *secret_locations: str | os.PathLike[str] | None,
     ) -> str | dict | None:
         """Attempts to parse a secret with multiple fallback options.
 
-        This method tries to parse a secret from the `secret_location` first.
-        If that fails or `secret_location` is not provided, it attempts to use
-        `fallback_secret_key` to look up the secret path from `SecretLocations`.
-        If that also fails or is not provided, it tries `fallback_secret_file`.
+        This method tries to parse a secret from each provided location in order
+        until one succeeds or all options are exhausted.
 
         Args:
-            secret_location: The primary file path of the secret.
-            fallback_secret_key: A key to look up a secret path in `SecretLocations`
-                as a secondary option. For example, "GCS" or "SF_USER".
-            fallback_secret_file: A direct file path to use as a tertiary fallback.
+            *secret_locations: Variable number of potential secret locations. Can be
+                file paths (str or PathLike) or None values (which are skipped).
 
         Returns:
             The parsed secret content (str or dict) if found through any method,
             otherwise None.
         """
-        secret_content = None
+        for location in secret_locations:
+            if location is None:
+                continue
 
-        # Main location
-        if secret_location:
-            secret_content = SecretManager.parse_secret(secret_location)
+            secret_content = SecretManager.parse_secret(location, verbose=False)
+            if secret_content:
+                return secret_content
 
-        # CLA fallback
-        if not secret_content and fallback_secret_key:
-            secret_content = SecretManager.parse_secret(SecretLocations()[fallback_secret_key])
-
-        # File fallback
-        if not secret_content and fallback_secret_file:
-            secret_content = SecretManager.parse_secret(fallback_secret_file)
-
-        return secret_content
+        return None

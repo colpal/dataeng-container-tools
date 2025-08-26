@@ -11,6 +11,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
+from dataeng_container_tools.secrets_manager import SecretLocations
 
 if TYPE_CHECKING:
     import os
@@ -33,7 +34,10 @@ class Snowflake(BaseModule):
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
-    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {"SF": "/vault/secrets/sf_creds.json"}
+    DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {
+        "SF": "/vault/secrets/sf-creds.json",
+        "SF_LEGACY": "/vault/secrets/sf_creds.json",
+    }
 
     def __init__(
         self,
@@ -52,9 +56,14 @@ class Snowflake(BaseModule):
         import snowflake.connector as sc
 
         sf_creds = BaseModuleUtilities.parse_secret_with_fallback(
+            # Override
             sf_secret_location,
-            self.MODULE_NAME if use_cla_fallback else None,
+            # Main SF paths
+            SecretLocations()[self.MODULE_NAME] if use_cla_fallback else None,
             self.DEFAULT_SECRET_PATHS[self.MODULE_NAME] if use_file_fallback else None,
+            # Secondary LEGACY SF paths
+            SecretLocations()["SF_LEGACY"] if use_cla_fallback else None,
+            self.DEFAULT_SECRET_PATHS["SF_LEGACY"] if use_file_fallback else None,
         )
 
         if not sf_creds:

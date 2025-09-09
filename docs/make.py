@@ -8,6 +8,7 @@ Python version of Makefile
 import argparse
 import json
 import logging
+import re
 import shutil
 import subprocess
 import sys
@@ -58,33 +59,80 @@ def build_multiversion_docs(build_dir: Path) -> bool:
     return True
 
 
+def get_git_tags() -> list[str]:
+    """Get all git tags from the repository."""
+    try:
+        cmd = ["git", "tag", "--list", "--sort=-version:refname"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        tags = [tag.strip() for tag in result.stdout.split("\n") if tag.strip()]
+    except subprocess.CalledProcessError:
+        logger.warning("Could not retrieve git tags. Using empty list.")
+        return []
+
+    return tags
+
+
+def parse_version_tags(tags: list[str]) -> dict[str, str]:
+    """Parse version tags and return latest patch for each major.minor version."""
+    version_pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
+    versions = {}
+
+    for tag in tags:
+        match = version_pattern.match(tag)
+        if match:
+            major, minor, patch = match.groups()
+
+            # Skip version 0.x.x (only document v1+)
+            if int(major) == 0:
+                continue
+
+            major_minor = f"{major}.{minor}"
+
+            # Store the first (highest) version for each major.minor (due to sort order)
+            if major_minor not in versions:
+                versions[major_minor] = tag
+
+    return versions
+
+
 def update_switcher_json() -> None:
     """Update the switcher.json file with available versions."""
     switcher_file = DOCS_PATH / "_static" / "switcher.json"
 
-    # Basic switcher configuration - can be enhanced to dynamically detect versions
+    # Get version tags from git
+    tags = get_git_tags()
+    latest_patches = parse_version_tags(tags)
+
+    # Build switcher data starting with latest
     switcher_data = [
         {
             "name": "latest",
             "version": "latest",
             "url": "/latest/",
         },
-        {
-            "name": "v1.0.1",
-            "version": "v1.0.1",
-            "url": "/v1.0.1/",
-        },
-        {
-            "name": "v1.0.0",
-            "version": "v1.0.0",
-            "url": "/v1.0.0/",
-        },
     ]
+
+    # Add all major.minor versions with their latest patch
+    for major_minor, tag in sorted(
+        latest_patches.items(),
+        key=lambda x: tuple(map(int, x[0].split("."))),
+        reverse=True,
+    ):
+        # Create virtual major.minor version
+        virtual_version = f"v{major_minor}" if tag.startswith("v") else major_minor
+
+        switcher_data.append(
+            {
+                "name": virtual_version,
+                "version": tag,
+                "url": f"/{virtual_version}/",
+            },
+        )
 
     try:
         with switcher_file.open("w") as f:
             json.dump(switcher_data, f, indent=2)
-        logger.info("Updated switcher.json")
+        logger.info("Updated switcher.json with %d versions", len(switcher_data))
     except Exception:
         logger.exception("Error updating switcher.json")
 
@@ -129,7 +177,7 @@ def build_pdf_docs(build_dir: Path) -> bool:
 def write_root_index(build_dir: Path, versions: list, template_path: Path) -> None:
     """Write a root index.html that redirects to the latest documentation version using a template."""
     index_path = build_dir / "html" / "index.html"
-    # Try to find the latest version (prefer one named 'latest' or 'stable', else use the last entry)
+    # Try to find the latest version (prefer one named 'latest', else use the last entry)
     latest = None
     for v in versions:
         if v.get("version", "").lower() == "latest":

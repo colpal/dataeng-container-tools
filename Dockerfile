@@ -23,7 +23,7 @@ ENV UV_NO_CACHE 1
 ENV UV_SYSTEM_PYTHON=true
 
 # Install the package with docs dependencies, build HTML docs, and set up Nginx
-RUN uv pip install --no-cache-dir -e '.[docs]' && \
+RUN uv pip install --no-cache-dir -e '.' && \
     python docs/make.py --html && \
     mkdir -p /usr/share/nginx/html && \
     cp -r docs/build/html/* /usr/share/nginx/html/ && \

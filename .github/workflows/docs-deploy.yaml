@@ -63,10 +63,7 @@ jobs:
         run: gcloud auth configure-docker us-east4-docker.pkg.dev
 
       - name: Build and push
-        id: docker-build
-        shell: bash
-        run: |
-          docker build ./Dockerfile \
-            --tag ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest
-
-          docker push ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest

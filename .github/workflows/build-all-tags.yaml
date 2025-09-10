@@ -22,7 +22,7 @@ jobs:
       - name: Install UV
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.8.9"
+          version: "0.8.15"
           python-version: "3.13"
           activate-environment: true
           enable-cache: false
@@ -30,7 +30,7 @@ jobs:
       - name: Install build tools
         shell: bash
         run: |
-          uv pip install twine
+          uv pip install twine==6.1.0
 
       - id: oidc
         uses: google-github-actions/auth@v2
@@ -78,6 +78,7 @@ jobs:
             uv build --quiet
 
             # Push to artifact registry
+            # Note skip-existing was removed in 6.2.0 of Twine
             twine upload dist/* \
               --repository-url ${{ secrets.ARTIFACT_REGISTRY_URL }} \
               --username ${{ secrets.ARTIFACT_REGISTRY_USERNAME }} \

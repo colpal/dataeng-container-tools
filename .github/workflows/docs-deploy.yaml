@@ -1,4 +1,4 @@
-name: Build All Package Tags
+name: Build Docs
 
 on:
   push:
@@ -10,19 +10,11 @@ permissions:
   id-token: write
 
 jobs:
-  build-all-tags:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install UV
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.8.15"
-          python-version: "3.13"
-          activate-environment: true
-          enable-cache: false
 
       - id: oidc
         uses: google-github-actions/auth@v2
@@ -67,3 +59,18 @@ jobs:
         with:
           push: true
           tags: ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest
+
+      - name: Google Auth
+        id: google_auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SANDBOX_KEY_AR }}
+          project_id: ${{ secrets.CLOUD_PROJECT_NAME }}
+
+      - name: Deploy to Cloud
+        run: |
+          gcloud run deploy ${{ secrets.CLOUD_SERVICE_NAME }} \
+            --image ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest \
+            --allow-unauthenticated \
+            --region us-east4 \
+            --timeout=600s

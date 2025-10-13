@@ -35,8 +35,10 @@ class Snowflake(BaseModule):
 
     MODULE_NAME: ClassVar[str] = "SF"
     DEFAULT_SECRET_PATHS: ClassVar[dict[str, str]] = {
-        "SF": "/vault/secrets/sf-creds.json",
-        "SF_LEGACY": "/vault/secrets/sf_creds.json",
+        "SF": "/vault/secrets/sf-key-pair.json",
+        "SF_ALT": "/vault/secrets/sf_key_pair.json",
+        "SF_LEGACY": "/vault/secrets/sf-creds.json",
+        "SF_LEGACY_ALT": "/vault/secrets/sf_creds.json",
     }
 
     def __init__(

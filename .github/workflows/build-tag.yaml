@@ -14,15 +14,11 @@ permissions:
   id-token: write
 
 jobs:
-  build-all-tags:
+  build-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-
-      - name: Fetch all tags
-        shell: bash
-        run: git fetch --tags
 
       - name: Install UV
         uses: astral-sh/setup-uv@v7
@@ -61,7 +57,7 @@ jobs:
         shell: bash
         run: |
           # tag="${{ github.event.inputs.tag }}"
-          tag="1.0.0-alpha.4"
+          tag="v1.0.0-alpha.4"
           echo "Processing $tag"
 
           # Create a clean directory for this tag

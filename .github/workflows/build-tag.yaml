@@ -1,0 +1,67 @@
+name: Build Package Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to build (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.2"
+          enable-cache: false
+
+      - id: oidc
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.VAULT_IAP_SA }}
+          id_token_audience: ${{ secrets.VAULT_IAP_CLIENT_ID }}
+          token_format: id_token
+          id_token_include_email: true
+
+      - name: Retrieve secrets from Vault
+        id: vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_URL }}
+          method: jwt
+          role: ${{ github.event.repository.name }}
+          exportEnv: false
+          extraHeaders: "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}"
+          secrets: |
+            ${{ secrets.VAULT_SECRET_PATH }} | password;
+      
+      - name: Google Auth (AR Token)
+        id: google-auth-ar
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ steps.vault.outputs.password }}
+          project_id: ${{ secrets.ARTIFACT_PROJECT_ID }}
+
+      - name: Build and release Python package for each tag
+        shell: bash
+        run: |
+          # Build the Python package
+          uv build --quiet
+
+          # Push to artifact registry
+          uv publish dist/* \
+              --publish-url "${{ secrets.ARTIFACT_REGISTRY_URL }}" \
+              --username "${{ secrets.ARTIFACT_REGISTRY_USERNAME }}" \
+              --password "${{ steps.vault.outputs.password }}"

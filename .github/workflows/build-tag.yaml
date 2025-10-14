@@ -19,6 +19,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: "v1.0.0-alpha.4"
+          # ref: ${{ github.event.inputs.tag }}
 
       - name: Install UV
         uses: astral-sh/setup-uv@v7
@@ -56,17 +59,6 @@ jobs:
       - name: Build and release Python package for each tag
         shell: bash
         run: |
-          # tag="${{ github.event.inputs.tag }}"
-          tag="v1.0.0-alpha.4"
-          echo "Processing $tag"
-
-          # Create a clean directory for this tag
-          WORK_DIR="build_${tag}"
-          git clone . "$WORK_DIR" --quiet
-          cd "$WORK_DIR"
-          git fetch --tags
-          git checkout "$tag" --quiet
-
           # Build the Python package
           uv build --quiet
 

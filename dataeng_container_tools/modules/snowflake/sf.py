@@ -57,16 +57,15 @@ class Snowflake(BaseModule):
         """Initialize a snowflake connection."""
         import snowflake.connector as sc
 
-        sf_creds = BaseModuleUtilities.parse_secret_with_fallback(
-            # Override
-            sf_secret_location,
-            # Main SF paths
-            SecretLocations()[self.MODULE_NAME] if use_cla_fallback else None,
-            self.DEFAULT_SECRET_PATHS[self.MODULE_NAME] if use_file_fallback else None,
-            # Secondary LEGACY SF paths
-            SecretLocations()["SF_LEGACY"] if use_cla_fallback else None,
-            self.DEFAULT_SECRET_PATHS["SF_LEGACY"] if use_file_fallback else None,
-        )
+        # Build list of secret paths in order of precedence
+        secret_paths = [sf_secret_location]
+        for key in [self.MODULE_NAME, "SF_ALT", "SF_LEGACY", "SF_LEGACY_ALT"]:
+            if use_cla_fallback:
+                secret_paths.append(SecretLocations().get(key))
+            if use_file_fallback:
+                secret_paths.append(self.DEFAULT_SECRET_PATHS.get(key))
+
+        sf_creds = BaseModuleUtilities.parse_secret_with_fallback(*secret_paths)
 
         if not sf_creds:
             msg = "Snowflake credentials not found"

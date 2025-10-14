@@ -62,9 +62,9 @@ jobs:
 
           # Create a clean directory for this tag
           WORK_DIR="build_${tag}"
-          rm -rf "$WORK_DIR" 2>/dev/null || true
           git clone . "$WORK_DIR" --quiet
           cd "$WORK_DIR"
+          git fetch --tags
           git checkout "$tag" --quiet
 
           # Build the Python package

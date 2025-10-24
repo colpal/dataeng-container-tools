@@ -6,15 +6,6 @@ readme = "README.md"
 maintainers = [
     { name = "CP DE Team", email = "git_data_science_engineering@colpal.com" },
 ]
-dependencies = [
-    "psutil>=7.0.0",
-    "openpyxl>=3.1.5",
-    "pyarrow>=21.0.0",
-    "pandas>=2.3.2,<3.0.0",
-    "google-cloud-storage>=3.3.1",
-    "google-cloud-datastore>=2.21.0",
-    "snowflake-connector-python>=3.17.3",
-]
 requires-python = ">=3.9"
 license = { text = "MIT License" }
 classifiers = [
@@ -22,6 +13,20 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+dependencies = [
+    "psutil>=7.0.0",
+    "openpyxl>=3.1.5",
+    "pyarrow>=21.0.0",
+    "pandas>=2.3.2,<3.0.0",
+    "google-cloud-storage>=3.3.1",
+    "google-cloud-datastore>=2.21.0",
+    "cryptography>=44.0.1",
+]
+
+[project.optional-dependencies]
+snowflake = ["snowflake-connector-python>=3.17.3"]
+polars = ["polars>=1.34.0"]
 
 [project.urls]
 homepage = "https://github.com/colpal/dataEng-container-tools"

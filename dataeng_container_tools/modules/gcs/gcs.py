@@ -241,7 +241,7 @@ class GCSFileIO(BaseModule):
     ) -> ...:
         """Downloads files from GCS to local file paths or Python objects.
 
-        This method dispatches to `download_to_file` and `download_to_object`
+        This method dispatches to `_download_to_file` and `_download_to_object`
         depending on whether the input is a list of tuple or string.
 
         When downloading to objects:
@@ -258,7 +258,7 @@ class GCSFileIO(BaseModule):
                   Example: `"gs://bucket/data.csv"`
                 - Note when provided a list, the user may mix and match file and object downloads.
             **kwargs:
-                - Only applicable to `download_to_object`
+                - Only applicable to `_download_to_object`
                 - `dtype`: Dictionary specifying data types for columns, primarily for
                   Pandas DataFrames.
                 - Other keyword arguments are passed to the underlying file reading functions
@@ -274,7 +274,7 @@ class GCSFileIO(BaseModule):
             TypeError: If `src_dst` is not a supported type (neither a list of tuples,
                 nor a string, nor a list of strings).
             FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.
-            ValueError: If a GCS URI for `download_to_file` contains wildcards.
+            ValueError: If a GCS URI for `_download_to_file` contains wildcards.
             Other exceptions may be raised by the GCS client or Pandas during file operations.
 
         Examples:
@@ -333,15 +333,15 @@ class GCSFileIO(BaseModule):
 
         # Download files if any
         if file_downloads:
-            self.download_to_file(file_downloads)
+            self._download_to_file(file_downloads)
 
         # Download objects if any
         if object_downloads:
-            result_objects = self.download_to_object(object_downloads, **kwargs)
+            result_objects = self._download_to_object(object_downloads, **kwargs)
 
         return result_objects
 
-    def download_to_file(
+    def _download_to_file(
         self,
         src_dst: Iterable[URIToPath],
     ) -> None:
@@ -354,7 +354,7 @@ class GCSFileIO(BaseModule):
         Raises:
             FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.
             ValueError: If a GCS URI contains wildcards, which are not supported for direct file downloads.
-                Use `download_to_object()` for glob pattern matching.
+                Use `_download_to_object()` for glob pattern matching.
         """
         for gcs_uri, local_file_path in src_dst:
             # Check for wildcards which are not supported for direct file downloads
@@ -362,7 +362,7 @@ class GCSFileIO(BaseModule):
                 msg = (
                     f"Wildcards are not supported for direct file downloads. "
                     f"URI '{gcs_uri}' contains wildcards. "
-                    f"Use download_to_object() instead for glob pattern matching."
+                    f"Download to Python objects instead for glob pattern matching."
                 )
                 raise ValueError(msg)
 
@@ -376,7 +376,7 @@ class GCSFileIO(BaseModule):
                 # In the future also raise 'google.cloud.exceptions.NotFound' in an ExceptionGroup (Python 3.11)
                 raise FileNotFoundError(msg)
 
-    def download_to_object(
+    def _download_to_object(
         self,
         gcs_uris: str | list[str],
         dtype: dict | None = None,
@@ -477,8 +477,8 @@ class GCSFileIO(BaseModule):
     ) -> None:
         """Uploads local files or in-memory Python objects to GCS.
 
-        This method dispatches to `upload_file` for local file uploads and
-        `upload_object` for Python object uploads. You must provide a list
+        This method dispatches to `_upload_file` for local file uploads and
+        `_upload_object` for Python object uploads. You must provide a list
         of (source, GCS URI) tuples.
 
         Metadata can be provided for the uploaded objects. Environment variables
@@ -552,13 +552,13 @@ class GCSFileIO(BaseModule):
 
         # Upload files if any
         if file_uploads:
-            self.upload_file(src_dst=file_uploads, metadata=metadata)
+            self._upload_file(src_dst=file_uploads, metadata=metadata)
 
         # Upload objects if any
         if object_uploads:
-            self.upload_object(src_dst=object_uploads, metadata=metadata, **kwargs)
+            self._upload_object(src_dst=object_uploads, metadata=metadata, **kwargs)
 
-    def upload_file(
+    def _upload_file(
         self,
         src_dst: Iterable[PathToURI],
         metadata: dict | None = None,
@@ -591,7 +591,7 @@ class GCSFileIO(BaseModule):
             blob.metadata = metadata
             blob.upload_from_filename(str(file))
 
-    def upload_object(
+    def _upload_object(
         self,
         src_dst: Iterable[tuple[object, str]],
         metadata: dict | None = None,

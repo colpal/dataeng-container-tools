@@ -78,7 +78,7 @@ def test_download_to_file_single(
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
     test_file = temp_dir / "downloaded.txt"
 
-    gcs_file_io.download_to_file([(test_uri, test_file)])
+    gcs_file_io.download([(test_uri, test_file)])
 
     # Verify: Check the downloaded content
     assert test_file.exists()
@@ -107,7 +107,7 @@ def test_download_to_file_multiple(
         (f"gs://{test_bucket.name}/file2.txt", temp_dir / "downloaded2.txt"),
     ]
 
-    gcs_file_io.download_to_file(src_dst)
+    gcs_file_io.download(src_dst)
 
     # Verify: Check the downloaded content
     assert (temp_dir / "downloaded1.txt").read_text() == "Content of file 1"
@@ -133,7 +133,7 @@ def test_download_to_object_parquet(
 
     # Test: Download the file as object
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
-    result = gcs_file_io.download_to_object(test_uri)
+    result = gcs_file_io.download(test_uri)
 
     # Verify: Check the result
     expected_key = f"{test_bucket.name}/{blob_name}"
@@ -158,7 +158,7 @@ def test_download_to_object_csv(
 
     # Test: Download the file as object
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
-    result = gcs_file_io.download_to_object(test_uri)
+    result = gcs_file_io.download(test_uri)
 
     # Verify: Check the result
     expected_key = f"{test_bucket.name}/{blob_name}"
@@ -187,7 +187,7 @@ def test_download_to_object_xlsx(
 
     # Test: Download the file as object
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
-    result = gcs_file_io.download_to_object(test_uri)
+    result = gcs_file_io.download(test_uri)
 
     # Verify: Check the result
     expected_key = f"{test_bucket.name}/{blob_name}"
@@ -212,7 +212,7 @@ def test_download_to_object_json(
 
     # Test: Download the file as object
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
-    result = gcs_file_io.download_to_object(test_uri)
+    result = gcs_file_io.download(test_uri)
 
     # Verify: Check the result
     expected_key = f"{test_bucket.name}/{blob_name}"
@@ -261,7 +261,7 @@ def test_download_mixed_extensions(
 
     # Test: Download all files
     uris = [f"gs://{test_bucket.name}/{filename}" for filename in test_files]
-    result = gcs_file_io.download_to_object(uris)
+    result = gcs_file_io.download(uris)
 
     # Verify: Check all results
     assert len(result) == 4
@@ -288,7 +288,7 @@ def test_download_unsupported_extension_returns_bytesio(
 
     # Test: Download all files
     uris = [f"gs://{test_bucket.name}/{filename}" for filename in unsupported_files]
-    result = gcs_file_io.download_to_object(uris)
+    result = gcs_file_io.download(uris)
 
     # Verify: All should return BytesIO
     assert len(result) == len(unsupported_files)
@@ -339,7 +339,7 @@ def test_download_with_wildcard(
 
     # Test: Download only CSV files with *.csv pattern
     csv_pattern_uri = f"gs://{test_bucket.name}/*.csv"
-    csv_result = gcs_file_io.download_to_object(csv_pattern_uri)
+    csv_result = gcs_file_io.download(csv_pattern_uri)
 
     # Verify: Only CSV files should be downloaded
     assert len(csv_result) == 3  # data1.csv, data2.csv, report.csv
@@ -358,7 +358,7 @@ def test_download_with_wildcard(
 
     # Test: Download files with mixed types using report.* pattern
     report_pattern_uri = f"gs://{test_bucket.name}/report.*"
-    report_result = gcs_file_io.download_to_object(report_pattern_uri)
+    report_result = gcs_file_io.download(report_pattern_uri)
 
     # Verify: Mixed return types based on extension
     assert len(report_result) == 3  # report.csv, report.parquet, report.bin
@@ -399,7 +399,7 @@ def test_download_with_dtype_parameter(
     # Test: Download with explicit dtype
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
     dtype_spec = {"id": str, "value": float}
-    result = gcs_file_io.download_to_object(test_uri, dtype=dtype_spec)
+    result = gcs_file_io.download(test_uri, dtype=dtype_spec)
 
     # Verify: Check types are preserved
     expected_key = f"{test_bucket.name}/{blob_name}"

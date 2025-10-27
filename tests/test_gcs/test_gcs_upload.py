@@ -75,7 +75,7 @@ def test_upload_file_single(
     blob_name = "uploaded.txt"
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
 
-    gcs_file_io.upload_file([(test_file, test_uri)])
+    gcs_file_io.upload([(test_file, test_uri)])
 
     # Verify: Check the uploaded content
     blob = test_bucket.blob(blob_name)
@@ -103,7 +103,7 @@ def test_upload_file_multiple(
         src_dst.append((local_file, test_uri))
 
     # Test: Upload the files
-    gcs_file_io.upload_file(src_dst)
+    gcs_file_io.upload(src_dst)
 
     # Verify: Check the uploaded content
     for filename, content in test_files.items():
@@ -124,7 +124,7 @@ def test_upload_object_dataframe_parquet(
     blob_name = "test.parquet"
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
 
-    gcs_file_io.upload_object([(test_data, test_uri)])
+    gcs_file_io.upload([(test_data, test_uri)])
 
     # Verify: Check the uploaded content
     blob = test_bucket.blob(blob_name)
@@ -148,7 +148,7 @@ def test_upload_object_dataframe_csv(
     blob_name = "test.csv"
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
 
-    gcs_file_io.upload_object([(test_data, test_uri)])
+    gcs_file_io.upload([(test_data, test_uri)])
 
     # Verify: Check the uploaded content
     blob = test_bucket.blob(blob_name)
@@ -171,7 +171,7 @@ def test_upload_object_dataframe_xlsx(
     blob_name = "test.xlsx"
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
 
-    gcs_file_io.upload_object([(test_data, test_uri)])
+    gcs_file_io.upload([(test_data, test_uri)])
 
     # Verify: Check the uploaded content
     blob = test_bucket.blob(blob_name)
@@ -194,7 +194,7 @@ def test_upload_object_string_json(
     blob_name = "test.json"
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
 
-    gcs_file_io.upload_object([(test_data, test_uri)])
+    gcs_file_io._upload_object([(test_data, test_uri)])
 
     # Verify: Check the uploaded content
     blob = test_bucket.blob(blob_name)
@@ -221,7 +221,7 @@ def test_upload_object_unsupported_type(
 
     for obj, uri in unsupported_objects:
         with pytest.raises((ValueError, TypeError, AttributeError)):
-            gcs_file_io.upload_object([(obj, uri)])
+            gcs_file_io._upload_object([(obj, uri)])
 
 
 def test_upload_object_multiple(
@@ -239,7 +239,7 @@ def test_upload_object_multiple(
     ]
 
     # Test: Upload the objects
-    gcs_file_io.upload_object(src_dst)
+    gcs_file_io.upload(src_dst)
 
     # Verify: Check all uploaded content
     # Check parquet file
@@ -267,7 +267,7 @@ def test_upload_object_unknown_extension_fails(
     test_uri = f"gs://{test_bucket.name}/test.unknown"
 
     with pytest.raises((ValueError, NotImplementedError)):
-        gcs_file_io.upload_object([(test_data, test_uri)])
+        gcs_file_io.upload([(test_data, test_uri)])
 
 
 def test_upload_mixed_types(
@@ -326,7 +326,7 @@ def test_upload_with_metadata(
     test_uri = f"gs://{test_bucket.name}/{blob_name}"
     metadata = {"custom-field": "test-value", "author": "pytest"}
 
-    gcs_file_io.upload_file([(test_file, test_uri)], metadata=metadata)
+    gcs_file_io.upload([(test_file, test_uri)], metadata=metadata)
 
     # Verify: Check the uploaded content and metadata
     blob = test_bucket.blob(blob_name)

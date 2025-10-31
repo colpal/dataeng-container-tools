@@ -1,0 +1,16 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+version = "1.0.0-alpha.5"
+rust-version = "1.89"
+homepage = "https://github.com/colpal/dataEng-container-tools"
+documentation = "https://github.com/colpal/dataEng-container-tools"
+repository = "https://github.com/colpal/dataEng-container-tools"
+authors = ["CP DP Team <git_data_science_engineering@colpal.com>"]
+license = "MIT"
+
+[workspace.dependencies]
+dect = { path = "crates/dect" }

@@ -53,6 +53,19 @@ def build_multiversion_docs(build_dir: Path) -> bool:
 
         build_html_docs(build_dir, latest=True)
 
+        # Write root index.html for version switching
+        switcher_file = DOCS_PATH / "_static" / "switcher.json"
+        template_path = Path(__file__).parent / "root.html"
+        versions = []
+        if switcher_file.exists():
+            try:
+                with switcher_file.open() as f:
+                    versions = json.load(f)
+            except Exception:
+                logger.exception("Could not read switcher.json for root index.html generation.")
+        if versions:
+            write_root_index(build_dir, versions, template_path)
+
     except subprocess.CalledProcessError:
         logger.exception("Error building multi-version documentation")
         return False
@@ -282,19 +295,6 @@ def main() -> None:
                 logger.info("\u2713 PDF files generated in latex directory, but final PDF not found")
         else:
             logger.error("\u2717 PDF documentation build failed")
-
-    # Write root index.html for version switching
-    switcher_file = DOCS_PATH / "_static" / "switcher.json"
-    template_path = Path(__file__).parent / "root.html"
-    versions = []
-    if switcher_file.exists():
-        try:
-            with switcher_file.open() as f:
-                versions = json.load(f)
-        except Exception:
-            logger.exception("Could not read switcher.json for root index.html generation.")
-    if versions:
-        write_root_index(build_dir, versions, template_path)
 
 
 if __name__ == "__main__":

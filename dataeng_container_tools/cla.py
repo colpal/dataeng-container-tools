@@ -13,6 +13,7 @@ import argparse
 import json
 import logging
 import os
+import sys
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, final
 
@@ -241,6 +242,7 @@ class CommandLineArguments:
         self.__description = description
         parser = parser if parser else argparse.ArgumentParser(description=description)
 
+        self.__add_generic_args(parser)
         self.__add_container_args(parser)
 
         if custom_args:
@@ -269,6 +271,10 @@ class CommandLineArguments:
                 extra={"version": __version__},
             )
             raise
+        finally:
+            if "--dump_argparse_schema" in sys.argv:  # Always dump schema if requested, even if exceptions occur
+                self.__dump_argparse_schema(parser)
+
         logger.info("CLA Input: %s", self)
 
         # Update Secret Locations with args
@@ -281,6 +287,15 @@ class CommandLineArguments:
             os.environ["RUN_ID"] = self.__args.run_id
             os.environ["NAMESPACE"] = self.__args.namespace
             os.environ["POD_NAME"] = self.__args.pod_name
+
+    def __add_generic_args(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--dump_argparse_schema",
+            action="store_true",
+            help=(
+                "If set, dumps the internal argparse schema as a JSON object to stdout. Exists for debugging purposes."
+            ),
+        )
 
     def __add_container_args(self, parser: argparse.ArgumentParser) -> None:
         if self.__input_files.value is not None:
@@ -416,3 +431,21 @@ class CommandLineArguments:
             paths=self.__args.output_paths,
             filenames=self.__args.output_filenames,
         )
+
+    def __dump_argparse_schema(self, parser: argparse.ArgumentParser) -> None:
+        """Dump the argparse schema as a JSON object to stdout."""
+        args = [
+            {
+                "option_strings": action.option_strings,
+                "dest": action.dest,
+                "help": action.help,
+                "type": getattr(action.type, "__name__", str(action.type)),
+                "default": action.default,
+                "required": action.required,
+                "nargs": action.nargs,
+                "choices": action.choices,
+                "metavar": action.metavar,
+            }
+            for action in parser._actions  # noqa: SLF001
+        ]
+        sys.stdout.write(json.dumps(args, indent=2))

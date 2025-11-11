@@ -31,6 +31,11 @@ pub enum Command {
         #[arg(long, help = "Start an interactive bash session instead of running the default command")]
         bash: bool,
     },
+    #[command(name = "args-md", about = "Generate markdown table from Python argparse schema")]
+    ArgparseMd {
+        #[arg(help = "Path to Python entrypoint file")]
+        python_file: PathBuf,
+    },
 }
 
 #[derive(Debug, Parser)]

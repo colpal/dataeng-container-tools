@@ -2,6 +2,7 @@ use clap::Parser;
 
 mod args;
 mod docker;
+mod args_md;
 
 use args::{Args, Command};
 
@@ -15,6 +16,9 @@ async fn main() {
         }
         Command::Test { path, bash } => {
             docker::test_container(&path, bash, args.global_options.verbose).await
+        }
+        Command::ArgparseMd { python_file } => {
+            args_md::generate_markdown(&python_file, args.global_options.verbose).await
         }
     };
     

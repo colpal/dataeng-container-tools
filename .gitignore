@@ -10,7 +10,6 @@ dist
 
 # Rust build
 target
-Cargo.lock
 
 # Pytest/Coverage
 .pytest_cache

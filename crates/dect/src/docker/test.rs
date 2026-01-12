@@ -6,16 +6,9 @@ use std::path::Path;
 use tokio::io::AsyncWriteExt;
 use tokio::task::spawn;
 
-#[cfg(not(windows))]
-use std::io::{stdout, Read, Write};
-#[cfg(not(windows))]
-use termion::async_stdin;
-#[cfg(not(windows))]
-use termion::raw::IntoRawMode;
-#[cfg(not(windows))]
-use tokio::time::sleep;
-#[cfg(not(windows))]
-use std::time::Duration;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use std::io::{stdout, Write};
+use tokio::io::{stdin, AsyncReadExt};
 
 use super::{build_image, get_image_tag};
 
@@ -55,6 +48,8 @@ pub async fn test_container(path: &Path, bash: bool, verbose: bool) -> Result<()
     
     // Cleanup function
     let cleanup = || async {
+        // Ensure raw mode is disabled before printing cleanup messages
+        let _ = disable_raw_mode();
         println!("\nCleaning up...");
         
         // Remove container
@@ -90,60 +85,40 @@ pub async fn test_container(path: &Path, bash: bool, verbose: bool) -> Result<()
         .stream(true)
         .build();
     
+    // Enable raw mode for interactive session
+    enable_raw_mode()?;
+
     let bollard::container::AttachContainerResults {
         mut output,
         mut input,
     } = docker.attach_container(&container_id, Some(attach_options)).await?;
     
-    #[cfg(not(windows))]
-    {
-        // Pipe stdin into the docker attach stream input (Unix-like systems with termion)
-        spawn(async move {
-            #[allow(clippy::unbuffered_bytes)]
-            let mut stdin = async_stdin().bytes();
-            loop {
-                if let Some(Ok(byte)) = stdin.next() {
-                    input.write_all(&[byte]).await.ok();
-                } else {
-                    sleep(Duration::from_nanos(10)).await;
+    // Pipe stdin into the docker attach stream input
+    spawn(async move {
+        let mut stdin = stdin();
+        let mut buf = [0u8; 32];
+        loop {
+            match stdin.read(&mut buf).await {
+                Ok(0) => break, // EOF
+                Ok(n) => {
+                    if input.write_all(&buf[..n]).await.is_err() {
+                        break;
+                    }
                 }
+                Err(_) => break,
             }
-        });
-        
-        // Set stdout in raw mode for TTY
-        let stdout = stdout();
-        let mut stdout = stdout.lock().into_raw_mode()?;
-        
-        // Pipe docker attach output into stdout
-        while let Some(Ok(output)) = output.next().await {
-            stdout.write_all(output.into_bytes().as_ref())?;
-            stdout.flush()?;
         }
+    });
+    
+    // Pipe docker attach output into stdout
+    let mut stdout = stdout();
+    while let Some(Ok(output)) = output.next().await {
+        stdout.write_all(output.into_bytes().as_ref())?;
+        stdout.flush()?;
     }
     
-    #[cfg(windows)]
-    {
-        // Windows: use tokio stdin without raw mode (termion not available)
-        use tokio::io::{AsyncReadExt, stdin};
-        
-        spawn(async move {
-            let mut stdin = stdin();
-            let mut buf = [0u8; 1];
-            loop {
-                if stdin.read_exact(&mut buf).await.is_ok() {
-                    input.write_all(&buf).await.ok();
-                }
-            }
-        });
-        
-        // Pipe docker attach output into stdout
-        use std::io::{stdout, Write};
-        let mut stdout = stdout();
-        while let Some(Ok(output)) = output.next().await {
-            stdout.write_all(output.into_bytes().as_ref())?;
-            stdout.flush()?;
-        }
-    }
+    // Disable raw mode
+    disable_raw_mode()?;
     
     // Cleanup
     cleanup().await;

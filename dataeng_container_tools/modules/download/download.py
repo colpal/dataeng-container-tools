@@ -12,7 +12,7 @@ import logging
 import os
 from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, overload
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, ParamSpec, overload
 
 import requests
 
@@ -169,7 +169,7 @@ class Download(BaseModule):
     @staticmethod
     def download(
         urls_to_files: Mapping[str, str | os.PathLike[str]],
-        **kwargs: Any,
+        **kwargs: ParamSpec,
     ) -> None | Generator | _ExecutorContext:
         r"""Downloads files from a mapping of URLs to local file paths.
 

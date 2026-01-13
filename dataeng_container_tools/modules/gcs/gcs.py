@@ -10,7 +10,7 @@ import json
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, cast, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Final, ParamSpec, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
@@ -222,7 +222,7 @@ class GCSFileIO(BaseModule):
         src_dst: str | Iterable[str],
         *,
         dtype: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> dict[str, Any]: ...
 
     @overload
@@ -231,13 +231,13 @@ class GCSFileIO(BaseModule):
         src_dst: Iterable[str | URIToPath],
         *,
         dtype: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> dict[str, Any]: ...
 
     def download(
         self,
         src_dst: str | URIToPath | Iterable[str | URIToPath],
-        **kwargs: Any,  # Use ParamSpec in future
+        **kwargs: ParamSpec,
     ) -> ...:
         """Downloads files from GCS to local file paths or Python objects.
 
@@ -380,7 +380,7 @@ class GCSFileIO(BaseModule):
         self,
         gcs_uris: str | list[str],
         dtype: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> dict[str, pd.DataFrame | io.BytesIO]:
         """Downloads file(s) from GCS into Python objects.
 
@@ -458,7 +458,7 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: PathToURI | Iterable[PathToURI],
         metadata: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> None: ...
 
     @overload
@@ -466,14 +466,14 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: ObjectToURI | Iterable[ObjectToURI],
         metadata: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> None: ...
 
     def upload(
         self,
         src_dst: PathToURI | ObjectToURI | Iterable[PathToURI | ObjectToURI],
         metadata: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future
+        **kwargs: ParamSpec,
     ) -> None:
         """Uploads local files or in-memory Python objects to GCS.
 
@@ -595,7 +595,7 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: Iterable[tuple[object, str]],
         metadata: dict | None = None,
-        **kwargs: Any,  # Use ParamSpec in future  # noqa: ANN401
+        **kwargs: ParamSpec,
     ) -> None:
         """Uploads Python object(s) to GCS.
 

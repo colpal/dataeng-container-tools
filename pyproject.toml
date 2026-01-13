@@ -6,7 +6,7 @@ readme = "README.md"
 maintainers = [
     { name = "CP DE Team", email = "git_data_science_engineering@colpal.com" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT License" }
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -35,15 +35,14 @@ tracker = "https://github.com/colpal/dataEng-container-tools/issues"
 
 [dependency-groups]
 dev = [
-    # Ruff
-    "ruff==0.11.8",
-
+    # Linting
+    "ruff==0.14.11",
+    "prek==0.2.27",
     # Type stubs
     "types-setuptools",
     "types-psutil==7.0.0.20250601",
     "types-requests==2.31.0.6",
     "pandas-stubs==2.2.2.240807",
-
     # Test
     "pytest==8.3.5",
     "pytest-cov==6.1.1",
@@ -63,12 +62,12 @@ packages = ["dataeng_container_tools"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["ALL"]
 exclude = [".git", ".vscode", ".venv", "__pycache__", ".eggs", "build", "dist"]
-# Disable `typing_extensions` imports. Causes issues in Python 3.9
+# Disable `typing_extensions` imports. Causes issues in Python 3.10
 typing-extensions = false
 
 [tool.ruff.lint.pydocstyle]
@@ -96,7 +95,10 @@ max-complexity = 20
     "S603",   # Subprocess
     "SLF001", # Private member access
 ]
+"dataeng_container_tools/**/*.py" = [
+    "PLC0415", # import-outside-top-level
+]
 
 [tool.pyright]
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 typeCheckingMode = "standard"

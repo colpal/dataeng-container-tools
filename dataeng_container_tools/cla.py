@@ -94,7 +94,7 @@ class CustomCommandLineArgument:
     ) -> None:
         """Initialize CustomCommandLineArgument with desired configuration.
 
-        See: https://docs.python.org/3.9/library/argparse.html
+        See: https://docs.python.org/3.10/library/argparse.html
 
         Args:
             name: Argument name.

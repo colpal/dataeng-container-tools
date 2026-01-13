@@ -19,13 +19,13 @@ jobs:
       - name: Install UV
         uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.12"
-          python-version: "3.9"
+          version: "0.9.24"
+          python-version: "3.10"
           activate-environment: true
           enable-cache: false
 
       - name: "Ruff format"
-        run: uvx ruff@0.11.8 format --diff .
+        run: uvx ruff@0.14.11 format --diff .
 
       - name: "Ruff lint"
-        run: uvx ruff@0.11.8 check .
+        run: uvx ruff@0.14.11 check .

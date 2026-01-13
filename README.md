@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/python-3.9+-blue">
+    <img src="https://img.shields.io/badge/python-3.10+-blue">
   </a>
   <a href="https://github.com/colpal/dataeng-container-tools/actions/workflows/ci.yaml"><img src="https://github.com/colpal/dataeng-container-tools/workflows/CI/badge.svg"></a>
   <a href="https://github.com/colpal/dataeng-container-tools/tree/main">

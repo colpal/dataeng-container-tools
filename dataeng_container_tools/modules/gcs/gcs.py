@@ -10,7 +10,7 @@ import json
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Union, cast, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Final, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from google.cloud import storage
     from google.cloud.storage.blob import Blob
 
-URIToPath = tuple[str, Union[str, os.PathLike[str]]]
-PathToURI = tuple[Union[str, os.PathLike[str]], str]
+URIToPath = tuple[str, str | os.PathLike[str]]
+PathToURI = tuple[str | os.PathLike[str], str]
 ObjectToURI = tuple[object, str]
 
 

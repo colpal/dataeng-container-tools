@@ -120,7 +120,7 @@ class Snowflake(BaseModule):
             cursor.close()
         return result
 
-    def __enter__(self) -> Snowflake:  # noqa: PYI034
+    def __enter__(self) -> Snowflake:
         """Context manager."""
         return self
 

@@ -70,7 +70,7 @@ def test_get_components_invalid_uri_no_prefix() -> None:
     """Test that get_components raises ValueError for URI without gs:// prefix."""
     test_uri = "s3://my-bucket/file.txt"
 
-    with pytest.raises(ValueError, match="Invalid GCS URI: 's3://my-bucket/file.txt'. URI must start with 'gs://'"):
+    with pytest.raises(ValueError, match=r"Invalid GCS URI: 's3://my-bucket/file.txt'. URI must start with 'gs://'"):
         GCSUriUtils.get_components(test_uri)
 
 
@@ -78,7 +78,7 @@ def test_get_components_invalid_uri_missing_prefix() -> None:
     """Test that get_components raises ValueError for URI missing prefix entirely."""
     test_uri = "my-bucket/file.txt"
 
-    with pytest.raises(ValueError, match="Invalid GCS URI: 'my-bucket/file.txt'. URI must start with 'gs://'"):
+    with pytest.raises(ValueError, match=r"Invalid GCS URI: 'my-bucket/file.txt'. URI must start with 'gs://'"):
         GCSUriUtils.get_components(test_uri)
 
 

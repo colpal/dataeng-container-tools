@@ -10,7 +10,7 @@ import json
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, ParamSpec, cast, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, ParamSpec, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     import pandas as pd
+    import polars as pl
     from google.cloud import storage
     from google.cloud.storage.blob import Blob
 
@@ -155,6 +156,7 @@ class GCSFileIO(BaseModule):
         *,
         local: bool = False,
         use_cla_fallback: bool = True,
+        engine: Literal["pandas", "polars"] = "pandas",
         use_file_fallback: bool = True,
     ) -> None:
         """Initializes GCSFileIO with desired configuration.
@@ -167,14 +169,32 @@ class GCSFileIO(BaseModule):
                 as a fallback for secret location if `gcs_secret_location` is not found.
             use_file_fallback: If True, attempts to use the default secret file path
                 as a fallback if other sources fail.
+            engine: The data engine to use. Defaults to "pandas".
+                Can also be "polars".
 
         Raises:
+            ImportError: If "polars" is selected as the engine but is not installed.
             FileNotFoundError: If GCS credentials are not found and not in local mode.
         """
         from google.cloud import storage
 
-        self.local = local
+        self.engine = engine
 
+        # Check imports + preload
+        if self.engine == "polars":
+            try:
+                import polars as pl  # noqa: F401
+            except ImportError as err:
+                msg = (
+                    "Polars is not installed. Please install it with 'pip install polars' "
+                    "or 'pip install dataeng-container-tools[polars]'"
+                )
+                raise ImportError(msg) from err
+        else:
+            import pandas as pd  # noqa: F401
+
+        # Credentials
+        self.local = local
         if not self.local:
             gcs_sa = BaseModuleUtilities.parse_secret_with_fallback(
                 gcs_secret_location,
@@ -381,7 +401,7 @@ class GCSFileIO(BaseModule):
         gcs_uris: str | list[str],
         dtype: dict | None = None,
         **kwargs: ParamSpec,
-    ) -> dict[str, pd.DataFrame | io.BytesIO]:
+    ) -> dict[str, pd.DataFrame | pl.DataFrame | io.BytesIO]:
         """Downloads file(s) from GCS into Python objects.
 
         Supports various file types like Parquet, CSV, XLSX, and JSON.
@@ -395,20 +415,20 @@ class GCSFileIO(BaseModule):
                 Can include glob patterns for matching multiple files.
             dtype: Dictionary specifying data types for columns, primarily for
                 Pandas DataFrames (e.g., when reading CSV or Parquet).
+                For Polars, this is passed as `schema_overrides` where applicable.
             **kwargs: Additional keyword arguments passed to the underlying file reading
-                functions (e.g., `pandas.read_parquet`, `pandas.read_csv`).
+                functions (e.g., `pandas.read_parquet`, `polars.read_parquet`).
 
         Returns:
             A dictionary mapping blob names to the downloaded objects.
-            The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet,
-            .csv; `io.BytesIO` for unrecognized types or if the file is not a table format).
+            The type of object depends on the file extension and the configured engine:
+            - `pd.DataFrame` or `pl.DataFrame` for .parquet, .csv, .xlsx, .json files.
+            - `io.BytesIO` for unrecognized types.
 
         Raises:
             FileNotFoundError: If a GCS blob specified by `gcs_uris` does not exist
                 (though `uri_to_blobs` usually handles this by returning an empty iterator).
         """
-        import pandas as pd
-
         if not isinstance(gcs_uris, list):
             gcs_uris = [gcs_uris]
 
@@ -424,34 +444,69 @@ class GCSFileIO(BaseModule):
             file_name = cast("str", blob.name)
             file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_name.endswith(ext)), None)
 
-            if file_extension == "parquet":
-                file_obj = pd.read_parquet(data, **kwargs)
-                if dtype:
-                    file_obj = file_obj.astype(dtype)
-
-            elif file_extension == "csv":
-                csv_kwargs = kwargs.copy()
-                csv_kwargs.setdefault("encoding", "utf-8")
-                file_obj = pd.read_csv(data, dtype=dtype, **csv_kwargs) if dtype else pd.read_csv(data, **csv_kwargs)
-
-            elif file_extension == "xlsx":
-                xlsx_kwargs = kwargs.copy()
-                xlsx_kwargs.setdefault("engine", "openpyxl")
-                file_obj = (
-                    pd.read_excel(data, dtype=dtype, **xlsx_kwargs) if dtype else pd.read_excel(data, **xlsx_kwargs)
-                )
-
-            elif file_extension == "json":
-                json_kwargs = kwargs.copy()
-                file_obj = pd.read_json(data, **json_kwargs)
-
-            else:
-                file_obj = data
-
-            # If no recognized format, return the file object itself
-            data_dict[f"{blob.bucket.name}/{blob.name}"] = file_obj
+            # If no recognized format, return the file object itself or processed df
+            data_dict[f"{blob.bucket.name}/{blob.name}"] = self._read_file_object(
+                data,
+                file_extension,
+                dtype,
+                **kwargs,
+            )
 
         return data_dict
+
+    def _read_file_object(
+        self,
+        data: io.BytesIO,
+        file_extension: str | None,
+        dtype: dict | None = None,
+        **kwargs: ParamSpec,
+    ) -> pd.DataFrame | pl.DataFrame | io.BytesIO:
+        """Helper to read file object into DataFrame or return bytes."""
+        if self.engine == "polars":
+            import polars as pl
+        else:
+            import pandas as pd
+
+        if file_extension == "parquet":
+            if self.engine == "polars":
+                file_obj = pl.read_parquet(data, **kwargs)
+                if dtype:
+                    file_obj = file_obj.cast(dtype)
+                return file_obj
+
+            file_obj = pd.read_parquet(data, **kwargs)
+            if dtype:
+                file_obj = file_obj.astype(dtype)
+            return file_obj
+
+        if file_extension == "csv":
+            csv_kwargs = kwargs.copy()
+            if self.engine == "polars":
+                csv_kwargs.setdefault("encoding", "utf8")
+                return pl.read_csv(data, schema_overrides=dtype, **csv_kwargs)
+
+            csv_kwargs.setdefault("encoding", "utf-8")
+            if dtype:
+                return pd.read_csv(data, dtype=dtype, **csv_kwargs)
+            return pd.read_csv(data, **csv_kwargs)
+
+        if file_extension == "xlsx":
+            xlsx_kwargs = kwargs.copy()
+            if self.engine == "polars":
+                return pl.read_excel(data, schema_overrides=dtype, **xlsx_kwargs)
+
+            xlsx_kwargs.setdefault("engine", "openpyxl")
+            if dtype:
+                return pd.read_excel(data, dtype=dtype, **xlsx_kwargs)
+            return pd.read_excel(data, **xlsx_kwargs)
+
+        if file_extension == "json":
+            json_kwargs = kwargs.copy()
+            if self.engine == "polars":
+                return pl.read_json(data, **json_kwargs)
+            return pd.read_json(data, **json_kwargs)
+
+        return data
 
     @overload
     def upload(  # File to URI
@@ -495,7 +550,7 @@ class GCSFileIO(BaseModule):
                   Example: `("local_data.csv", "gs://bucket/remote_data.csv")`
                 - Object Uploads: An ObjectToURI which is a tuple (source object, destination uri).
                   Supported object types depend on the file extension of the `gcs_uri`
-                  (e.g., `pd.DataFrame` for .parquet, .csv, .xlsx; `str` for .json,
+                  (e.g., `pd.DataFrame` or `pl.DataFrame` for .parquet, .csv, .xlsx; `str` for .json,
                   which will be `json.dumps`ed).
                   Example: `(my_dataframe, "gs://bucket/df.parquet")`
             metadata: A dictionary of metadata to associate with the
@@ -503,7 +558,7 @@ class GCSFileIO(BaseModule):
                 `NAMESPACE`, `POD_NAME`, `GITHUB_SHA`) are automatically included if present.
             **kwargs: Additional keyword arguments passed to the underlying
                 upload or serialization functions (e.g., `pandas.DataFrame.to_parquet`,
-                `pandas.DataFrame.to_csv`).
+                `polars.DataFrame.write_parquet`).
 
         Raises:
             ValueError: If uploading an object and no compatible file extension is found
@@ -608,20 +663,18 @@ class GCSFileIO(BaseModule):
         Args:
             src_dst: List of tuples, where each tuple
                 contains (Python object, GCS URI) pairs to upload. Supported object types include:
-                - `pandas.DataFrame` (for .parquet, .csv, .xlsx extensions in GCS URI)
+                - `pandas.DataFrame` or `pl.DataFrame` (for .parquet, .csv, .xlsx extensions in GCS URI)
                 - `str` (for .json extension in GCS URI; the string will be `json.dumps`'d)
             metadata: A dictionary of metadata to associate with the
                 GCS object(s). Environment variables (`DAG_ID`, `RUN_ID`, `NAMESPACE`,
                 `POD_NAME`, `GITHUB_SHA`) are automatically included if present.
             **kwargs: Additional keyword arguments passed to the serialization
-                functions (e.g., `pandas.DataFrame.to_parquet`, `pandas.DataFrame.to_csv`).
+                functions (e.g., `pandas.DataFrame.to_parquet`, `polars.DataFrame.write_parquet`).
 
         Raises:
             ValueError: If no compatible file extension is found in the `gcs_uri`
                 for serializing the object, or if the object type is not supported for that extension.
         """
-        import pandas as pd
-
         metadata = metadata or {}
 
         # Add environment variables to metadata
@@ -640,36 +693,79 @@ class GCSFileIO(BaseModule):
             # Determine file type
             file_extension = next((ext.lstrip(".") for ext in self.KNOWN_EXTENSIONS if file_path.endswith(ext)), None)
 
-            # Handle based on file type
-            if file_extension == "parquet" and isinstance(object_to_upload, pd.DataFrame):
+            self._serialize_and_upload(object_to_upload, file_extension, blob, **kwargs)
+
+    def _serialize_and_upload(
+        self,
+        object_to_upload: object,
+        file_extension: str | None,
+        blob: Blob,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> None:
+        """Helper to serialize and upload object."""
+        if self.engine == "polars":
+            import polars as pl
+        else:
+            import pandas as pd
+
+        if file_extension == "parquet":
+            if self.engine == "polars" and isinstance(object_to_upload, pl.DataFrame):
+                parquet_kwargs = kwargs.copy()
+                file_obj = io.BytesIO()
+                object_to_upload.write_parquet(file_obj, **parquet_kwargs)
+                file_obj.seek(0)
+                blob.upload_from_file(file_obj)
+                return
+            if self.engine == "pandas" and isinstance(object_to_upload, pd.DataFrame):
                 parquet_kwargs = kwargs.copy()
                 file_obj = io.BytesIO()
                 object_to_upload.to_parquet(file_obj, **parquet_kwargs)
                 file_obj.seek(0)
                 blob.upload_from_file(file_obj)
+                return
 
-            elif file_extension == "csv" and isinstance(object_to_upload, pd.DataFrame):
+        elif file_extension == "csv":
+            if self.engine == "polars" and isinstance(object_to_upload, pl.DataFrame):
+                csv_kwargs = kwargs.copy()
+                file_obj = io.BytesIO()
+                object_to_upload.write_csv(file_obj, **csv_kwargs)
+                file_obj.seek(0)
+                blob.upload_from_file(file_obj)
+                return
+            if self.engine == "pandas" and isinstance(object_to_upload, pd.DataFrame):
                 csv_kwargs = kwargs.copy()
                 csv_kwargs.setdefault("encoding", "utf-8")
                 csv_kwargs.setdefault("index", False)
                 csv_string = object_to_upload.to_csv(**csv_kwargs)
                 blob.upload_from_string(csv_string)
+                return
 
-            elif file_extension == "xlsx" and isinstance(object_to_upload, pd.DataFrame):
+        elif file_extension == "xlsx":
+            if self.engine == "polars" and isinstance(object_to_upload, pl.DataFrame):
+                xlsx_kwargs = kwargs.copy()
+                file_obj = io.BytesIO()
+                object_to_upload.write_excel(file_obj, **xlsx_kwargs)
+                file_obj.seek(0)
+                blob.upload_from_file(file_obj)
+                return
+            if self.engine == "pandas" and isinstance(object_to_upload, pd.DataFrame):
                 xlsx_kwargs = kwargs.copy()
                 xlsx_kwargs.setdefault("index", False)
                 file_obj = io.BytesIO()
                 object_to_upload.to_excel(file_obj, **xlsx_kwargs)
                 file_obj.seek(0)
                 blob.upload_from_file(file_obj)
+                return
 
-            elif file_extension == "json" and isinstance(object_to_upload, str):
-                json_string = json.dumps(object_to_upload)
-                blob.upload_from_string(json_string)
+        elif file_extension == "json" and isinstance(object_to_upload, str):
+            json_string = json.dumps(object_to_upload)
+            blob.upload_from_string(json_string)
+            return
 
-            else:
-                msg = (
-                    f"No compatible file extension '{file_extension}' found for object type "
-                    f"'{type(object_to_upload)!s}'."
-                )
-                raise ValueError(msg)
+        msg = (
+            f"Object type '{type(object_to_upload)!s}' not supported for extension '{file_extension}' "
+            f"with engine '{self.engine}'."
+        )
+        if not file_extension:
+            msg = f"No compatible file extension '{file_extension}' found for object type '{type(object_to_upload)!s}'."
+        raise ValueError(msg)

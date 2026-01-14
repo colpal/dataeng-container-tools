@@ -26,7 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 snowflake = ["snowflake-connector-python>=3.17.3"]
-polars = ["polars>=1.34.0"]
+polars = ["polars[excel]>=1.34.0"]
 
 [project.urls]
 homepage = "https://github.com/colpal/dataEng-container-tools"

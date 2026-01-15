@@ -5,7 +5,7 @@ This module can connect to a Snowflake table and execute a custom query.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, ParamSpec
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -52,7 +52,7 @@ class Snowflake(BaseModule):
         sf_secret_location: str | os.PathLike[str] | None = None,
         use_cla_fallback: bool = True,
         use_file_fallback: bool = True,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None:
         """Initialize a snowflake connection."""
         import snowflake.connector as sc

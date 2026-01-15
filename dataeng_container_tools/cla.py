@@ -15,7 +15,7 @@ import logging
 import os
 import sys
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, ParamSpec, final
+from typing import TYPE_CHECKING, Any, ClassVar, final
 
 from . import __version__
 from .modules.gcs.gcs import GCSUriUtils
@@ -90,7 +90,7 @@ class CustomCommandLineArgument:
         metavar: str | tuple[str, ...] | None = ...,
         dest: str | None = ...,
         version: str = ...,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None:
         """Initialize CustomCommandLineArgument with desired configuration.
 

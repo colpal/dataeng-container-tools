@@ -10,7 +10,7 @@ import json
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, ParamSpec, cast, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, cast, overload
 
 from dataeng_container_tools.modules import BaseModule, BaseModuleUtilities
 
@@ -242,7 +242,7 @@ class GCSFileIO(BaseModule):
         src_dst: str | Iterable[str],
         *,
         dtype: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> dict[str, Any]: ...
 
     @overload
@@ -251,13 +251,13 @@ class GCSFileIO(BaseModule):
         src_dst: Iterable[str | URIToPath],
         *,
         dtype: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> dict[str, Any]: ...
 
     def download(
         self,
         src_dst: str | URIToPath | Iterable[str | URIToPath],
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> ...:
         """Downloads files from GCS to local file paths or Python objects.
 
@@ -400,7 +400,7 @@ class GCSFileIO(BaseModule):
         self,
         gcs_uris: str | list[str],
         dtype: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> dict[str, pd.DataFrame | pl.DataFrame | io.BytesIO]:
         """Downloads file(s) from GCS into Python objects.
 
@@ -459,7 +459,7 @@ class GCSFileIO(BaseModule):
         data: io.BytesIO,
         file_extension: str | None,
         dtype: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> pd.DataFrame | pl.DataFrame | io.BytesIO:
         """Helper to read file object into DataFrame or return bytes."""
         if self.engine == "polars":
@@ -513,7 +513,7 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: PathToURI | Iterable[PathToURI],
         metadata: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None: ...
 
     @overload
@@ -521,14 +521,14 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: ObjectToURI | Iterable[ObjectToURI],
         metadata: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None: ...
 
     def upload(
         self,
         src_dst: PathToURI | ObjectToURI | Iterable[PathToURI | ObjectToURI],
         metadata: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None:
         """Uploads local files or in-memory Python objects to GCS.
 
@@ -650,7 +650,7 @@ class GCSFileIO(BaseModule):
         self,
         src_dst: Iterable[tuple[object, str]],
         metadata: dict | None = None,
-        **kwargs: ParamSpec,
+        **kwargs: Any,
     ) -> None:
         """Uploads Python object(s) to GCS.
 
@@ -700,7 +700,7 @@ class GCSFileIO(BaseModule):
         object_to_upload: object,
         file_extension: str | None,
         blob: Blob,
-        **kwargs: Any,  # noqa: ANN401
+        **kwargs: Any,
     ) -> None:
         """Helper to serialize and upload object."""
         if self.engine == "polars":

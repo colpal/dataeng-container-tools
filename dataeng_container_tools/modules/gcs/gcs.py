@@ -77,37 +77,67 @@ class GCSUriUtils:
     @staticmethod
     def build_uris(
         bucket_names: list[str],
-        paths: list[str],
-        filenames: list[str],
+        paths: list[str] | None,
+        filenames: list[str] | None,
     ) -> list[str]:
         """Build GCS URIs from bucket names, paths, and filenames.
 
         Args:
             bucket_names: List of bucket names. If only one bucket is provided,
                 it will be used for all files.
-            paths: List of paths within buckets.
-            filenames: List of filenames.
+            paths: List of paths within buckets. If only one path is provided,
+                it will be used for all files. Can be None.
+            filenames: List of filenames. Can be None.
 
         Returns:
             List of GCS URIs in format "gs://bucket_name/path/filename".
+            If only bucket_names and paths are provided, returns list of path URIs.
+            If only bucket_names is provided, returns list of bucket URIs.
 
         Raises:
             ValueError: If bucket_names length is not 1 or equal to filenames length.
         """
+        if not bucket_names:
+            msg = "bucket_names cannot be None or empty"
+            raise ValueError(msg)
+
+        # Only bucket_names, return as is
+        if not paths and not filenames:
+            return [GCSUriUtils.normalize_uri(f"{GCSUriUtils.PREFIX}{bucket_name}") for bucket_name in bucket_names]
+
+        if len(paths) not in (0, 1, len(bucket_names)):
+            msg = f"paths length ({len(paths)}) must be 1 or equal to bucket_names length ({len(bucket_names)})"
+            raise ValueError(msg)
+
+        # Only bucket_names and paths, return simple combination
+        if not filenames:
+            uris = []
+            for pos, path in enumerate(paths):
+                bucket_name = bucket_names[0] if len(bucket_names) == 1 else bucket_names[pos]
+
+                # Build URI and normalize to handle path separators
+                raw_uri = f"{GCSUriUtils.PREFIX}{bucket_name}/{path}"
+                uris.append(GCSUriUtils.normalize_uri(raw_uri))
+            return uris
+
         if len(bucket_names) not in (1, len(filenames)):
             msg = f"bucket_names length ({len(bucket_names)}) must be 1 or equal to filenames length ({len(filenames)})"
             raise ValueError(msg)
 
-        constant_bucket = len(bucket_names) == 1
-        bucket_name = bucket_names[0] if constant_bucket else ""
-
+        # All three, build full URI
         uris = []
         for pos, filename in enumerate(filenames):
-            if not constant_bucket:
-                bucket_name = bucket_names[pos]
+            bucket_name = bucket_names[0] if len(bucket_names) == 1 else bucket_names[pos]
+
+            if not paths:
+                path_name = ""
+            elif len(paths) == 1:
+                path_name = paths[0]
+            else:
+                path_name = paths[pos]
 
             # Build URI and normalize to handle path separators
-            raw_uri = f"{GCSUriUtils.PREFIX}{bucket_name}/{paths[pos]}/{filename}"
+            raw_uri = f"{GCSUriUtils.PREFIX}{bucket_name}/{path_name}/{filename}"
             uris.append(GCSUriUtils.normalize_uri(raw_uri))
 
         return uris

@@ -135,7 +135,9 @@ def test_mismatched_input_lengths(mock_file_path: Path) -> None:
             "bucket1",
             "bucket2",
             "--input_paths",
-            "path1",  # Only one path for two buckets
+            "path1",  # Three paths for two buckets
+            "path2",
+            "path3",
             "--input_filenames",
             "file1.csv",
             "file2.csv",

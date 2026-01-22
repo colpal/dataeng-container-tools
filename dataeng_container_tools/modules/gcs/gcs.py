@@ -70,6 +70,10 @@ class GCSUriUtils:
             raise ValueError(msg)
 
         gcs_uri = gcs_uri.removeprefix(GCSUriUtils.PREFIX)
+
+        if "/" not in gcs_uri:  # Assume the URI is the bucket name
+            return gcs_uri, ""
+
         bucket = gcs_uri[: gcs_uri.find("/")]
         file_path = gcs_uri[gcs_uri.find("/") + 1 :]
         return bucket, file_path

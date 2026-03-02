@@ -20,7 +20,7 @@ The recommended way to install DE Container Tools is via pip:
 
 .. code-block:: bash
 
-    pip install dataeng-container-tools
+    pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
 
 Installing for Development
 --------------------------

@@ -122,7 +122,7 @@ Of the ``argparse`` args, ``type`` or ``data_type`` here is the most interesting
     ]
 
     # Create command line arguments parser with custom arguments
-    cla = CommandLineArguments(custom_inputs=custom_args, description="My data processing script")
+    cla = CommandLineArguments(custom_args=custom_args, description="My data processing script")
 
     # Get the parsed arguments namespace
     args = cla.get_arguments()

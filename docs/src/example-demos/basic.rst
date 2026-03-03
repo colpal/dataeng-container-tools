@@ -4,34 +4,56 @@ Basic Example Container
 The following is a basic container that uses this library.
 
 
+pyproject.toml
+----------------
+.. code-block:: text
+
+   [project]
+   name = "some-container"
+   version = "0.1.0"
+   description = "Add your description here"
+   readme = "README.md"
+   requires-python = ">=3.13,<3.14"
+   dependencies = [
+       "dataeng-container-tools",
+   ]
+
+   [tool.uv.sources]
+   dataeng-container-tools = { git = "https://github.com/colpal/dataeng-container-tools.git", rev = "v1.0.0-alpha.7" }
+
+
 Dockerfile
 ----------
 
 .. code-block:: Docker
 
-   FROM ghcr.io/astral-sh/uv:0.7.15-python3.13-bookworm-slim
+   FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/astral/uv:0.10.7-python3.13-trixie-slim AS builder
    
-   WORKDIR /usr/src/app
-
-   COPY scripts/* .
-   COPY requirements.txt .
+   WORKDIR /app
 
    RUN apt-get update && \
        apt-get install -y --no-install-recommends \
        git=1:2.* && \
        rm -rf /var/lib/apt/lists/*
 
-   ENTRYPOINT ["python", "./entrypoint.py"]
+   COPY .python-version pyproject.toml uv.lock ./
+
+   ENV UV_PYTHON_INSTALL_DIR="/app/python"
+
+   uv sync --frozen --no-dev --no-cache --compile-bytecode
+
+   FROM debian:trixie-slim
+
+   WORKDIR /app
+
+   COPY --from=builder /app/.venv .venv
+   COPY --from=builder /app/python python
+   COPY ./app ./app
+
+   ENTRYPOINT ["/app/.venv/bin/python", "app/entrypoint.py"]
 
 
-requirements.txt
-----------------
-.. code-block:: text
-
-   git+https://github.com/colpal/dataEng-container-tools.git@1.0.0
-
-
-scripts/entrypoint.py
+app/entrypoint.py
 ---------------------
 
 .. code-block:: python

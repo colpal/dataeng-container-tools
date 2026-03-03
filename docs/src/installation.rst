@@ -4,46 +4,50 @@ Installation
 Requirements
 ------------
 
-DE Container Tools requires Python 3.9 or higher. The package has the following dependencies:
-
-* pandas
-* google-cloud-storage
-* google-cloud-datastore
-* openpyxl
-* pyarrow
-* psutil
+DE Container Tools requires Python 3.10 or higher.
 
 Installing from PyPI
 --------------------
 
-The recommended way to install DE Container Tools is via pip:
+.. tabs::
 
-.. code-block:: bash
+   .. tab:: UV (Recommended)
 
-    pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+      UV is a fast Python package installer and resolver. Learn more at https://docs.astral.sh/uv/
 
-Installing for Development
---------------------------
+      .. code-block:: bash
 
-For development, you can install the package in editable mode with additional dependencies:
+          uv pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
 
-.. code-block:: bash
+   .. tab:: pip
 
-    # Clone the repository
-    git clone https://github.com/colpal/dataeng-container-tools.git
-    cd dataeng-container-tools
-    
-    # Install in editable mode with development dependencies
-    pip install -e ".[dev,docs]"
+      .. code-block:: bash
 
-Install Specific Version
-------------------------
+          pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
 
-To install a specific version of the package:
+Install Optionals
+-----------------
 
-.. code-block:: bash
+The following optional dependencies are available:
 
-    pip install dataeng-container-tools==1.0.0
+- `snowflake`
+- `polars`
+
+To install additional optional dependencies:
+
+.. tabs::
+
+   .. tab:: UV (Recommended)
+
+      .. code-block:: bash
+
+          uv pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
+
+   .. tab:: pip
+
+      .. code-block:: bash
+
+          pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
 
 Verification
 ------------

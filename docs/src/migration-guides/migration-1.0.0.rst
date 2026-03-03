@@ -37,7 +37,7 @@ The following files, classes, functions have been renamed. References in this pa
 Removed
 -------
 
-- Python 3.7 and 3.8 support has been dropped
+- Python 3.7-3.9 support have been dropped
 - Removed ``BQ`` (BigQuery) module (and ``bq.py``)
 - Removed ``simple_setup.py``
 - Removed all ``exceptions`` (and ``exceptions.py``)

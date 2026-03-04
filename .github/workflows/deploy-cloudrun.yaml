@@ -1,0 +1,41 @@
+name: Deploy Cloud Run Service
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-cloudrun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: google-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WI_PROVIDER }}
+          service_account: ${{ secrets.CR_SA }}
+
+      - name: Setup gcloud
+        id: setup-gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Deploy Cloud Run service with GCS volume mount
+        run: |
+          gcloud run deploy "dataeng-container-tools" \
+            --image=nginx:alpine \
+            --platform=managed \
+            --region=${{ secrets.CR_REGION }} \
+            --project=${{ secrets.CR_PROJECT }} \
+            --service-account=${{ secrets.CR_SA }} \
+            --port=80 \
+            --add-volume=name=gcs-docs,type=cloud-storage,bucket=${{ secrets.CR_BUCKET }} \
+            --add-volume-mount=volume=gcs-docs,mount-path=/usr/share/nginx/html \
+            --cpu=0.5 \
+            --memory=256Mi \
+            --min-instances=0

@@ -1,76 +1,42 @@
-name: Build Docs
+name: Build and Deploy Docs
 
 on:
   push:
     branches:
       - feature/v1-docs
+  workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  build-docs:
+  build-and-upload-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - id: oidc
-        uses: google-github-actions/auth@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          credentials_json: ${{ secrets.VAULT_IAP_SA }}
-          id_token_audience: ${{ secrets.VAULT_IAP_CLIENT_ID }}
-          token_format: id_token
-          id_token_include_email: true
+          version: "0.9.24"
 
-      - name: Retrieve secrets from Vault
-        id: vault
-        uses: hashicorp/vault-action@v3
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          method: jwt
-          role: ${{ github.event.repository.name }}
-          exportEnv: false
-          extraHeaders: "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}"
-          secrets: |
-            ${{ secrets.VAULT_SECRET_PATH_DOCS }} | password;
+      - name: Build documentation
+        run: uv run python docs/make.py --html
 
       - name: Google Auth
         id: google-auth
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ steps.vault.outputs.password }}
-          project_id: ${{ secrets.ARTIFACT_PROJECT_ID}}
+          workload_identity_provider: ${{ secrets.WI_PROVIDER }}
 
       - name: Setup gcloud
         id: setup-gcloud
         uses: google-github-actions/setup-gcloud@v3
-        with:
-          version: '532.0.0'
 
-      - name: Authorize docker with GCP
-        id: auth-image
-        shell: bash
-        run: gcloud auth configure-docker us-east4-docker.pkg.dev
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest
-
-      - name: Google Auth
-        id: google_auth
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SANDBOX_KEY_AR }}
-          project_id: ${{ secrets.CLOUD_PROJECT_NAME }}
-
-      - name: Deploy to Cloud
+      - name: Upload docs to GCS
         run: |
-          gcloud run deploy ${{ secrets.CLOUD_SERVICE_NAME }} \
-            --image ${{ secrets.ARTIFACT_REGISTRY_LOCATION_DOCS }}:latest \
-            --allow-unauthenticated \
-            --region us-east4 \
-            --timeout=600s
+          gcloud config set project ${{ secrets.CR_PROJECT }}
+          gsutil -m rsync -r -d docs/src/build/html gs://${{ secrets.CR_BUCKET }}/
+          gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ secrets.CR_BUCKET }}/**

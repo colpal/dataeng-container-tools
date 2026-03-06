@@ -1,9 +1,6 @@
 name: Build and Deploy Docs
 
 on:
-  push:
-    branches:
-      - feature/v1-docs
   workflow_dispatch:
 
 permissions:
@@ -15,25 +12,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          version: "0.9.24"
+          version: "0.10.8"
 
       - name: Build documentation
         run: uv run python docs/make.py --html
 
       - name: Google Auth
         id: google-auth
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
+          project_id: ${{ secrets.CR_PROJECT }}
           workload_identity_provider: ${{ secrets.WI_PROVIDER }}
 
       - name: Setup gcloud
         id: setup-gcloud
-        uses: google-github-actions/setup-gcloud@v3
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
 
       - name: Upload docs to GCS
         run: |

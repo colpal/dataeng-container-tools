@@ -17,51 +17,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.inputs.tag }}
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          version: "0.9.2"
+          version: "0.10.8"
           enable-cache: false
 
-      - id: oidc
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.VAULT_IAP_SA }}
-          id_token_audience: ${{ secrets.VAULT_IAP_CLIENT_ID }}
-          token_format: id_token
-          id_token_include_email: true
-
-      - name: Retrieve secrets from Vault
-        id: vault
-        uses: hashicorp/vault-action@v3
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          method: jwt
-          role: ${{ github.event.repository.name }}
-          exportEnv: false
-          extraHeaders: "Authorization: Bearer ${{ steps.oidc.outputs.id_token }}"
-          secrets: |
-            ${{ secrets.VAULT_SECRET_PATH }} | password;
-      
       - name: Google Auth (AR Token)
         id: google-auth-ar
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
-          credentials_json: ${{ steps.vault.outputs.password }}
           project_id: ${{ secrets.ARTIFACT_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.WI_PROVIDER }}
+
+      - name: Setup gcloud
+        id: setup-gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
 
       - name: Build and release Python package for each tag
         shell: bash
         run: |
+          GAR_TOKEN="$(gcloud auth print-access-token)"
+
           # Build the Python package
           uv build --quiet
 
           # Push to artifact registry
           uv publish dist/* \
               --publish-url "${{ secrets.ARTIFACT_REGISTRY_URL }}" \
-              --username "${{ secrets.ARTIFACT_REGISTRY_USERNAME }}" \
-              --password "${{ steps.vault.outputs.password }}"
+              --username "oauth2accesstoken" \
+              --password "$GAR_TOKEN"

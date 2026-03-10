@@ -15,6 +15,11 @@ coverage.*
 *.cover
 htmlcov
 
+# Sphinx Build
+docs/src/build*
+docs/src/autoapi
+docs/src/_static/switcher.json
+
 # macOS generated files
 .DS_Store
 
@@ -35,3 +40,4 @@ htmlcov
 .ruff_cache
 uv.lock
 .mypy_cache
+*.env

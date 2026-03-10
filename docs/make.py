@@ -93,7 +93,7 @@ def parse_version_tags(tags: list[str]) -> dict[str, str]:
     for tag in tags:
         match = version_pattern.match(tag)
         if match:
-            major, minor, patch = match.groups()
+            major, minor, _patch = match.groups()
 
             # Skip version 0.x.x (only document v1+)
             if int(major) == 0:

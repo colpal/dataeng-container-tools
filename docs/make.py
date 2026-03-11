@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 # Configure logger
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -44,6 +45,32 @@ def build_html_docs(build_dir: Path, *, latest: bool = False) -> bool:
     return True
 
 
+def rename_version_directories(build_dir: Path, switcher_data: list[dict]) -> None:
+    """Rename tag directories to virtual major.minor version directories using switcher data."""
+    html_dir = build_dir / "html"
+    if not html_dir.exists():
+        return
+
+    # Use switcher data to map version tags to virtual versions
+    for entry in switcher_data:
+        if entry.get("version") == "latest":  # Skip 'latest' entry
+            continue
+
+        virtual_version = cast("str", entry.get("name"))  # major.minor
+        tag = cast("str", entry.get("version"))  # major.minor.patch-meta
+
+        if not virtual_version or not tag:
+            continue
+
+        tag_dir = html_dir / tag
+        virtual_dir = html_dir / virtual_version
+
+        # Only rename if tag directory exists and names differ
+        if tag_dir.exists() and tag_dir.is_dir() and tag != virtual_version:
+            tag_dir.rename(virtual_dir)
+            logger.info("Renamed directory: %s -> %s", tag, virtual_version)
+
+
 def build_multiversion_docs(build_dir: Path) -> bool:
     """Build multi-version HTML documentation."""
     try:
@@ -53,16 +80,22 @@ def build_multiversion_docs(build_dir: Path) -> bool:
 
         build_html_docs(build_dir, latest=True)
 
-        # Write root index.html for version switching
+        # Load switcher data for version mapping
         switcher_file = DOCS_PATH / "_static" / "switcher.json"
-        template_path = Path(__file__).parent / "root.html"
         versions = []
         if switcher_file.exists():
             try:
                 with switcher_file.open() as f:
                     versions = json.load(f)
             except Exception:
-                logger.exception("Could not read switcher.json for root index.html generation.")
+                logger.exception("Could not read switcher.json for version mapping.")
+
+        # Rename tag directories to virtual versions for stable URLs
+        if versions:
+            rename_version_directories(build_dir, versions)
+
+        # Write root index.html for version switching
+        template_path = Path(__file__).parent / "root.html"
         if versions:
             write_root_index(build_dir, versions, template_path)
 
@@ -87,7 +120,7 @@ def get_git_tags() -> list[str]:
 
 def parse_version_tags(tags: list[str]) -> dict[str, str]:
     """Parse version tags and return latest patch for each major.minor version."""
-    version_pattern = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
+    version_pattern = re.compile(r"^v(\d+)\.(\d+)\.(\d+)(?:-[\w.]+)?$")
     versions = {}
 
     for tag in tags:
@@ -108,7 +141,7 @@ def parse_version_tags(tags: list[str]) -> dict[str, str]:
     return versions
 
 
-def update_switcher_json() -> None:
+def update_switcher_json() -> list:
     """Update the switcher.json file with available versions."""
     switcher_file = DOCS_PATH / "_static" / "switcher.json"
 
@@ -146,8 +179,11 @@ def update_switcher_json() -> None:
         with switcher_file.open("w") as f:
             json.dump(switcher_data, f, indent=2)
         logger.info("Updated switcher.json with %d versions", len(switcher_data))
+        return switcher_data
+
     except Exception:
         logger.exception("Error updating switcher.json")
+    return []
 
 
 def build_pdf_docs(build_dir: Path) -> bool:

@@ -19,7 +19,7 @@ jobs:
           version: "0.10.8"
 
       - name: Build documentation
-        run: uv run python docs/make.py --html
+        run: uv run python docs/make.py --multiversion
 
       - name: Google Auth
         id: google-auth
@@ -34,6 +34,5 @@ jobs:
 
       - name: Upload docs to GCS
         run: |
-          gcloud config set project ${{ secrets.CR_PROJECT }}
           gsutil -m rsync -r -d docs/src/build/html gs://${{ secrets.CR_BUCKET }}/
           gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ secrets.CR_BUCKET }}/**

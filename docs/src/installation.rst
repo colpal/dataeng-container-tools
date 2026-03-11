@@ -16,14 +16,16 @@ Installing from PyPI
       UV is a fast Python package installer and resolver. Learn more at https://docs.astral.sh/uv/
 
       .. code-block:: bash
+        :substitutions:
 
-          uv pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+          uv pip install git+https://github.com/colpal/dataeng-container-tools.git@|version|
 
    .. tab:: pip
 
       .. code-block:: bash
+        :substitutions:
 
-          pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+          pip install git+https://github.com/colpal/dataeng-container-tools.git@|version|
 
 Install Optionals
 -----------------
@@ -40,14 +42,16 @@ To install additional optional dependencies:
    .. tab:: UV (Recommended)
 
       .. code-block:: bash
+        :substitutions:
 
-          uv pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
+          uv pip install dataeng-container-tools[snowflake]==|version|
 
    .. tab:: pip
 
       .. code-block:: bash
+        :substitutions:
 
-          pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
+          pip install dataeng-container-tools[snowflake]==|version|
 
 Verification
 ------------

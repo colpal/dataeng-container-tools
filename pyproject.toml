@@ -49,18 +49,18 @@ dev = [
     "requests-mock==1.12.1",
     "fakesnow[server]==0.9.41",
     "googleapis-storage-testbench @ git+https://github.com/googleapis/storage-testbench@1c8f6306bf9969b7b86d09da9ac0fe61c79682b1", # v0.54.0 No official pip package yet
-
     # Docs
-    "sphinx==7.4.7",
+    "sphinx==8.1.3",
     "sphinx-book-theme==1.1.4",
-    "sphinx-autoapi==3.6.0",
-    "myst-parser==2.0.0",
+    "sphinx-autoapi==3.8.0",
+    "myst-parser==4.0.1",
     "sphinx-copybutton==0.5.2",
-    "sphinx-togglebutton==0.3.2",
-    "sphinx-tabs==3.4.7",
+    "sphinx-togglebutton==0.4.4",
+    "sphinx-tabs==3.5.0",
     "sphinxcontrib-napoleon==0.7",
-    "esbonio==0.16.5",
+    "esbonio>=1.1.0",
     "sphinx-multiversion==0.2.4",
+    "sphinx-substitution-extensions==2026.1.12",
 ]
 
 [build-system]

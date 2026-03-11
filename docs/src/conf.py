@@ -22,6 +22,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_togglebutton",
     "sphinx_tabs.tabs",
+    "sphinx_substitution_extensions",
     "sphinx.ext.viewcode",  # Must be kept last: https://github.com/readthedocs/sphinx-autoapi/issues/422
 ]
 
@@ -101,6 +102,12 @@ myst_enable_extensions = [
 ]
 myst_heading_anchors = 3
 
+# RST substitutions
+rst_prolog = f"""
+.. |version| replace:: {version if version.startswith("v") else "{version}"}
+.. |release| replace:: {release if release.startswith("v") else "{release}"}
+"""
+
 html_sidebars = {
     "**": [
         "navbar-logo.html",
@@ -111,8 +118,8 @@ html_sidebars = {
 }
 
 # Sphinx-multiversion configuration
-smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"
-smv_branch_whitelist = r"^(v1/docs)$"
-smv_remote_whitelist = r"^origin$"
+smv_tag_whitelist = r"^v\d+\.\d+\.\d+(?:-[\w.]+)?$"
+smv_branch_whitelist = None
+smv_remote_whitelist = r"^.*$"
 smv_released_pattern = r"^refs/tags/.*$"
 smv_outputdir_format = "{ref.name}"

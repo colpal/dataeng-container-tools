@@ -12,7 +12,6 @@ author = "CP DE Team"
 version = __version__
 release = version
 
-# General configuration
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx_multiversion",
@@ -34,6 +33,7 @@ master_doc = "index"
 html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_js_files = ["custom-version-switcher.js"]
 html_title = f"DE Container Tools {version}"
 html_logo = "_static/logo-light.svg"
 html_favicon = "_static/favicon.ico"

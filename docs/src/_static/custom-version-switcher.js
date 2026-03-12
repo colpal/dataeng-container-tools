@@ -7,10 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get the current version from the page context
             const currentVersion = DOCUMENTATION_OPTIONS.VERSION || 'latest';
             
+            // For tagged releases (starting with 'v'), use actual version
+            // For dev/latest builds, use placeholder string
+            const displayVersion = currentVersion.startsWith('v') ? currentVersion : 'latest';
+            
             // Update button text to show current version
             const buttonText = versionButton.childNodes[0];
             if (buttonText && buttonText.nodeType === Node.TEXT_NODE) {
-                buttonText.textContent = currentVersion + ' ';
+                buttonText.textContent = displayVersion + ' ';
             }
         }
     }, 100);

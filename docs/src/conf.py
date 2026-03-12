@@ -12,6 +12,8 @@ author = "CP DE Team"
 version = __version__
 release = version
 
+print(f"*****Version: {version}")
+
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx_multiversion",

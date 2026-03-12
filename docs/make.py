@@ -141,7 +141,7 @@ def parse_version_tags(tags: list[str]) -> dict[str, str]:
     return versions
 
 
-def update_switcher_json() -> list:
+def update_switcher_json() -> None:
     """Update the switcher.json file with available versions."""
     switcher_file = DOCS_PATH / "_static" / "switcher.json"
 
@@ -179,11 +179,9 @@ def update_switcher_json() -> list:
         with switcher_file.open("w") as f:
             json.dump(switcher_data, f, indent=2)
         logger.info("Updated switcher.json with %d versions", len(switcher_data))
-        return switcher_data
 
     except Exception:
         logger.exception("Error updating switcher.json")
-    return []
 
 
 def build_pdf_docs(build_dir: Path) -> bool:

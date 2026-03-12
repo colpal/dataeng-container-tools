@@ -29,7 +29,6 @@ jobs:
         run: |
           gcloud run deploy "dataeng-container-tools" \
             --image=nginx:alpine \
-            --platform=managed \
             --region=${{ secrets.CR_REGION }} \
             --project=${{ secrets.CR_PROJECT }} \
             --service-account=${{ secrets.CR_SA }} \

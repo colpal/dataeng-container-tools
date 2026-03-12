@@ -1,27 +1,22 @@
-Introduction
-============
+# Introduction
 
-Overview
---------
+## Overview
 
 The Data Engineering Container Tools package provides a comprehensive set of utilities designed to streamline container operations for data engineering tasks. This package simplifies common operations when working with containerized applications, particularly in cloud environments.
 
-Core Components
----------------
+## Core Components
 
 The package is organized into several core modules:
 
-Command Line Arguments (CLA)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Command Line Arguments (CLA)
 
 The CLA module provides tools for retrieving and processing command line inputs in a standardized way. It includes three main classes:
 
-* ``CommandLineArguments`` - Creates, parses, and retrieves command line inputs commonly used in data engineering containers
-* ``CommandLineArgumentType`` - An enumeration for defining argument requirements (REQUIRED, OPTIONAL, UNUSED)
-* ``CustomCommandLineArgument`` - A wrapper for creating custom command line arguments
+* `CommandLineArguments` - Creates, parses, and retrieves command line inputs commonly used in data engineering containers
+* `CommandLineArgumentType` - An enumeration for defining argument requirements (REQUIRED, OPTIONAL, UNUSED)
+* `CustomCommandLineArgument` - A wrapper for creating custom command line arguments
 
-Google Cloud Storage (GCS)
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Google Cloud Storage (GCS)
 
 The GCS module handles interactions with Google Cloud Storage, providing methods for downloading and uploading files with various formats, including:
 
@@ -32,8 +27,7 @@ The GCS module handles interactions with Google Cloud Storage, providing methods
 * JSON files
 * Pickle files
 
-Database Operations (DB)
-~~~~~~~~~~~~~~~~~~~~~~~~
+### Database Operations (DB)
 
 The DB module provides utilities for working with Google Cloud Datastore. It handles operations such as:
 
@@ -41,8 +35,7 @@ The DB module provides utilities for working with Google Cloud Datastore. It han
 * Managing task execution state
 * Handling metadata for tasks
 
-Safe Text I/O
-~~~~~~~~~~~~~
+### Safe Text I/O
 
 The SafeTextIO module ensures secrets are not accidentally printed to stdout or stderr. It provides:
 
@@ -50,8 +43,7 @@ The SafeTextIO module ensures secrets are not accidentally printed to stdout or 
 * Secret file handling
 * Secure logging capabilities
 
-Secret Management
-~~~~~~~~~~~~~~~~~
+### Secret Management
 
 The SecretManager component manages secrets for all modules, providing:
 
@@ -59,7 +51,6 @@ The SecretManager component manages secrets for all modules, providing:
 * Automatic registration of module secret needs
 * Path resolution and fallbacks for secret locations
 
-Getting Started
----------------
+## Getting Started
 
-See the :doc:`installation` section for installation instructions and see the :doc:`example-demos/index` and :doc:`/modules/index` sections for detailed usage examples.
+See the [Installation](installation.md) section for installation instructions and see the [Example Demos](example-demos/index.md) and [Modules](modules/index.md) sections for detailed usage examples.

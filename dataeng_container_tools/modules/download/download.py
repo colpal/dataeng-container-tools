@@ -208,10 +208,10 @@ class Download(BaseModule):
 
         Raises:
             NotImplementedError: If an invalid `output` mode is specified.
-            Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
-            raised during the download process, especially when `output="futures"`
-            and `future.result()` is called. For "complete" and "generator" modes,
-            exceptions are caught and logged.
+            Exceptions from `requests`: (e.g., `requests.exceptions.HTTPError`) can be
+                raised during the download process, especially when `output="futures"`
+                and `future.result()` is called. For "complete" and "generator" modes,
+                exceptions are caught and logged.
 
         Examples:
             Download a single file and wait for completion:
@@ -297,10 +297,10 @@ class Download(BaseModule):
 
         Raises:
             NotImplementedError: If an unsupported `output` mode is provided.
-            Exceptions from `requests` (e.g., `requests.exceptions.HTTPError`) can be
-            propagated, especially when `output="futures"` and `future.result()` is called.
-            For "complete" and "generator" modes, exceptions during individual downloads
-            are caught and logged, allowing other downloads to proceed.
+            Exceptions from `requests`: (e.g., `requests.exceptions.HTTPError`) can be
+                propagated, especially when `output="futures"` and `future.result()` is called.
+                For "complete" and "generator" modes, exceptions during individual downloads
+                are caught and logged, allowing other downloads to proceed.
         """
         if headers is None:
             headers = {}

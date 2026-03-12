@@ -321,15 +321,15 @@ class GCSFileIO(BaseModule):
         Returns:
             - Empty dict if only downloading to local files
             - If downloading to Python objects: A dictionary mapping blob names to downloaded objects.
-              The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet and
-              .csv files; otherwise `io.BytesIO` for unrecognized types).
+                The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet and
+                .csv files; otherwise `io.BytesIO` for unrecognized types).
 
         Raises:
             TypeError: If `src_dst` is not a supported type (neither a list of tuples,
                 nor a string, nor a list of strings).
             FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.
             ValueError: If a GCS URI for `_download_to_file` contains wildcards.
-            Other exceptions may be raised by the GCS client or Pandas during file operations.
+            Exceptions from `gcs` and `pandas`: Propagated during file operations.
 
         Examples:
             Download a single file to a local path:
@@ -597,7 +597,7 @@ class GCSFileIO(BaseModule):
         Raises:
             ValueError: If uploading an object and no compatible file extension is found
                 in the `gcs_uri`, or if the object type is not supported for the extension.
-            Other exceptions may be raised by the GCS client or Pandas during file operations.
+            Exceptions from `gcs` and `pandas`: Propagated during file operations.
 
         Examples:
             Upload a single local file:

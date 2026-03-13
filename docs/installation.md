@@ -11,13 +11,13 @@ DE Container Tools requires Python 3.10 or higher.
     UV is a fast Python package installer and resolver. Learn more at https://docs.astral.sh/uv/
 
     ```bash
-    uv pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+    uv pip install git+https://github.com/colpal/dataeng-container-tools.git@{version}
     ```
 
 === "pip"
 
     ```bash
-    pip install git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+    pip install git+https://github.com/colpal/dataeng-container-tools.git@{version}
     ```
 
 ## Install Optionals
@@ -32,13 +32,13 @@ To install additional optional dependencies:
 === "UV (Recommended)"
 
     ```bash
-    uv pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
+    uv pip install dataeng-container-tools[snowflake]=={version}
     ```
 
 === "pip"
 
     ```bash
-    pip install dataeng-container-tools[snowflake]==1.0.0-alpha.7
+    pip install dataeng-container-tools[snowflake]=={version}
     ```
 
 ## Verification

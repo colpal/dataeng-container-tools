@@ -2864,6 +2864,16 @@ nor a string, nor a list of strings).</p>
               </div>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code>Exceptions from `gcs` and `pandas`</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagated during file operations.</p>
+              </div>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3030,15 +3040,15 @@ nor a string, nor a list of strings).</p>
 </span><span id="__span-0-321"><a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">    Returns:</span>
 </span><span id="__span-0-322"><a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">        - Empty dict if only downloading to local files</span>
 </span><span id="__span-0-323"><a id="__codelineno-0-323" name="__codelineno-0-323"></a><span class="sd">        - If downloading to Python objects: A dictionary mapping blob names to downloaded objects.</span>
-</span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">          The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet and</span>
-</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">          .csv files; otherwise `io.BytesIO` for unrecognized types).</span>
+</span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a><span class="sd">            The type of object depends on the file extension (e.g., `pd.DataFrame` for .parquet and</span>
+</span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">            .csv files; otherwise `io.BytesIO` for unrecognized types).</span>
 </span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a>
 </span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    Raises:</span>
 </span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">        TypeError: If `src_dst` is not a supported type (neither a list of tuples,</span>
 </span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">            nor a string, nor a list of strings).</span>
 </span><span id="__span-0-330"><a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">        FileNotFoundError: If a GCS blob specified in `src_dst` does not exist.</span>
 </span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">        ValueError: If a GCS URI for `_download_to_file` contains wildcards.</span>
-</span><span id="__span-0-332"><a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="sd">        Other exceptions may be raised by the GCS client or Pandas during file operations.</span>
+</span><span id="__span-0-332"><a id="__codelineno-0-332" name="__codelineno-0-332"></a><span class="sd">        Exceptions from `gcs` and `pandas`: Propagated during file operations.</span>
 </span><span id="__span-0-333"><a id="__codelineno-0-333" name="__codelineno-0-333"></a>
 </span><span id="__span-0-334"><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-335"><a id="__codelineno-0-335" name="__codelineno-0-335"></a><span class="sd">        Download a single file to a local path:</span>
@@ -3247,6 +3257,16 @@ in the <code>gcs_uri</code>, or if the object type is not supported for the exte
               </div>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code>Exceptions from `gcs` and `pandas`</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagated during file operations.</p>
+              </div>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3397,7 +3417,7 @@ in the <code>gcs_uri</code>, or if the object type is not supported for the exte
 </span><span id="__span-0-597"><a id="__codelineno-0-597" name="__codelineno-0-597"></a><span class="sd">    Raises:</span>
 </span><span id="__span-0-598"><a id="__codelineno-0-598" name="__codelineno-0-598"></a><span class="sd">        ValueError: If uploading an object and no compatible file extension is found</span>
 </span><span id="__span-0-599"><a id="__codelineno-0-599" name="__codelineno-0-599"></a><span class="sd">            in the `gcs_uri`, or if the object type is not supported for the extension.</span>
-</span><span id="__span-0-600"><a id="__codelineno-0-600" name="__codelineno-0-600"></a><span class="sd">        Other exceptions may be raised by the GCS client or Pandas during file operations.</span>
+</span><span id="__span-0-600"><a id="__codelineno-0-600" name="__codelineno-0-600"></a><span class="sd">        Exceptions from `gcs` and `pandas`: Propagated during file operations.</span>
 </span><span id="__span-0-601"><a id="__codelineno-0-601" name="__codelineno-0-601"></a>
 </span><span id="__span-0-602"><a id="__codelineno-0-602" name="__codelineno-0-602"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-603"><a id="__codelineno-0-603" name="__codelineno-0-603"></a><span class="sd">        Upload a single local file:</span>

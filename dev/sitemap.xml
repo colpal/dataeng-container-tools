@@ -2,142 +2,142 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/installation/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/introduction/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/contributing/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/contributing/creating-modules/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/contributing/standards/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/example-demos/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/example-demos/basic/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/migration-guides/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/migration-guides/migration-1.0.0/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/command-line/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/container-utils/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/datastore-operations/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/downloader/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/gcs-operations/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/secrets-handling/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/modules/snowflake/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/SUMMARY/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/cla/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/container_utils/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/log_utils/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/safe_textio/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/secrets_manager/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/base_module/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/datastore/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/datastore/datastore/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/download/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/download/download/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/gcs/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/gcs/gcs/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/snowflake/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
     <url>
          <loc>https://dataeng-container-tools-515523808041.us-east4.run.app/dev/reference/dataeng_container_tools/modules/snowflake/sf/</loc>
-         <lastmod>2026-03-12</lastmod>
+         <lastmod>2026-03-13</lastmod>
     </url>
 </urlset>

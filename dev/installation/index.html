@@ -2035,11 +2035,11 @@
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>UV is a fast Python package installer and resolver. Learn more at https://docs.astral.sh/uv/</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/colpal/dataeng-container-tools.git@<span class="o">{</span>version<span class="o">}</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/colpal/dataeng-container-tools.git@v1.0.0-alpha.7
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/colpal/dataeng-container-tools.git@<span class="o">{</span>version<span class="o">}</span>
 </span></code></pre></div>
 </div>
 </div>
@@ -2054,21 +2054,19 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">UV (Recommended)</label><label for="__tabbed_2_2">pip</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>dataeng-container-tools<span class="o">[</span>snowflake<span class="o">]==</span><span class="m">1</span>.0.0-alpha.7
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>dataeng-container-tools<span class="o">[</span>snowflake<span class="o">]=={</span>version<span class="o">}</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>dataeng-container-tools<span class="o">[</span>snowflake<span class="o">]==</span><span class="m">1</span>.0.0-alpha.7
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>dataeng-container-tools<span class="o">[</span>snowflake<span class="o">]=={</span>version<span class="o">}</span>
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
 <p>To verify that the package has been installed correctly, you can run:</p>
-<div class="language-text highlight"><pre><span></span><code>```bash
-python -c &quot;import dataeng_container_tools; print(dataeng_container_tools.__version__)&quot;
-```
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import dataeng_container_tools; print(dataeng_container_tools.__version__)&quot;</span>
+</span></code></pre></div>
 <p>This should display the version number of the installed package.</p>
 
 

@@ -45,8 +45,8 @@ To install additional optional dependencies:
 
 To verify that the package has been installed correctly, you can run:
 
-    ```bash
-    python -c "import dataeng_container_tools; print(dataeng_container_tools.__version__)"
-    ```
+```bash
+python -c "import dataeng_container_tools; print(dataeng_container_tools.__version__)"
+```
 
 This should display the version number of the installed package.

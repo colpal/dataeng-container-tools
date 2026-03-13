@@ -2,24 +2,70 @@ name: Build and Deploy Docs
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build-and-upload-docs:
     permissions:
-      contents: read
+      contents: write
       id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          version: "0.10.8"
+          version: "0.10.9"
 
-      - name: Build documentation
-        run: uv run python docs/make.py --html
+      - name: Configure git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            
+            # Check if this is a pre-release (contains alpha, beta, rc, dev, etc.)
+            if [[ "$VERSION" =~ (alpha|beta|rc|dev|pre) ]]; then
+              echo "Pre-release tag detected: $VERSION"
+              echo "version=dev" >> $GITHUB_OUTPUT
+              echo "alias=" >> $GITHUB_OUTPUT
+            else
+              echo "Stable release tag detected: $VERSION"
+              echo "version=$VERSION" >> $GITHUB_OUTPUT
+              echo "alias=latest" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy docs
+        run: |
+          if [[ -n "$STEPS_VERSION_OUTPUTS_ALIAS" ]]; then
+            uv run mike deploy --push --update-aliases $STEPS_VERSION_OUTPUTS_VERSION $STEPS_VERSION_OUTPUTS_ALIAS
+            uv run mike set-default --push latest
+          else
+            uv run mike deploy --push $STEPS_VERSION_OUTPUTS_VERSION
+          fi
+        env:
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
+          STEPS_VERSION_OUTPUTS_ALIAS: ${{ steps.version.outputs.alias }}
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: gh-pages
+          clean: true
 
       - name: Google Auth
         id: google-auth
@@ -32,8 +78,7 @@ jobs:
         id: setup-gcloud
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
 
-      - name: Upload docs to GCS
+      - name: Sync gh-pages to GCS
         run: |
-          gcloud config set project ${{ secrets.CR_PROJECT }}
-          gsutil -m rsync -r -d docs/src/build/html gs://${{ secrets.CR_BUCKET }}/
+          gsutil -m rsync -r -d -x '.git/.*|gha-creds-.*\.json' . gs://${{ secrets.CR_BUCKET }}/
           gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ secrets.CR_BUCKET }}/**

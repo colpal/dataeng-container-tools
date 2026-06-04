@@ -55,7 +55,14 @@ class Snowflake(BaseModule):
         **kwargs: Any,
     ) -> None:
         """Initialize a snowflake connection."""
-        import snowflake.connector as sc
+        try:
+            import snowflake.connector as sc
+        except ImportError as e:
+            msg = (
+                "The 'snowflake' extra is required to use the Snowflake class. "
+                "Install it with: dataeng-container-tools[snowflake]"
+            )
+            raise ImportError(msg) from e
 
         # Build list of secret paths in order of precedence
         secret_paths = [sf_secret_location]

@@ -24,15 +24,15 @@ dependencies = [
     "psutil>=7.2.2",
     "pyarrow>=24.0.0",
     "pandas>=2.3.3",
-    "google-cloud-storage>=3.11.0",
-    "cryptography>=49.0.0",
+    "google-cloud-storage>=3.4.1",
+    "cryptography>=48.0.0",
 ]
 
 [project.optional-dependencies]
-datastore = ["google-cloud-datastore>=2.25.0"]
-snowflake = ["snowflake-connector-python>=3.17.3"]
-polars = ["polars[excel]>=1.34.0"]
-excel = ["pandas[excel]>-3.0.0"]
+datastore = ["google-cloud-datastore>=2.21.0"]
+snowflake = ["snowflake-connector-python>=4.6.0"]
+polars = ["polars[excel]>=1.41.2"]
+excel = ["pandas[excel]>=2.3.3"]
 
 [project.urls]
 homepage = "https://github.com/colpal/dataEng-container-tools"

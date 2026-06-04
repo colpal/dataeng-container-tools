@@ -63,7 +63,14 @@ class Datastore(BaseModule):
             use_file_fallback: If True, attempts to use the default secret file
                 as a fallback source when both primary and command-line sources fail.
         """
-        from google.cloud import datastore
+        try:
+            from google.cloud import datastore
+        except ImportError as e:
+            msg = (
+                "The 'datastore' extra is required to use the Datastore class. "
+                "Install it with: dataeng-container-tools[datastore]"
+            )
+            raise ImportError(msg) from e
 
         self.current_task_kind = task_kind
 
@@ -160,7 +167,14 @@ class Datastore(BaseModule):
             order_task_entries_params: Optional parameters for ordering task entries
                 when retrieving existing entries.
         """
-        from google.cloud import datastore
+        try:
+            from google.cloud import datastore
+        except ImportError as e:
+            msg = (
+                "The 'datastore' extra is required to use the Datastore class. "
+                "Install it with: pip install dataeng-container-tools[datastore]"
+            )
+            raise ImportError(msg) from e
 
         # Get commit ID from environment if available
         commit_id = os.environ.get("GITHUB_SHA", "")

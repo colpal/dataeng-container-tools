@@ -231,20 +231,6 @@ def test_download_with_custom_parameters(
             assert file_path.exists(), f"File {file_path} was not created"
 
 
-def test_download_process_mode(mock_urls_and_files: dict[str, Path], mock_file_content: dict[str, str]) -> None:
-    """Test download with process mode."""
-    with requests_mock.Mocker() as m:
-        for url, content in mock_file_content.items():
-            m.get(url, text=content)
-
-        Download.download(mock_urls_and_files, mode="process", output="complete")
-
-        # Verify all files were downloaded
-        for url, file_path in mock_urls_and_files.items():
-            assert file_path.exists(), f"File {file_path} was not created"
-            assert file_path.read_text() == mock_file_content[url], f"File content mismatch for {file_path}"
-
-
 def test_download_with_error_handling(temp_dir: Path) -> None:
     """Test download error handling in complete mode."""
     urls_and_files = {

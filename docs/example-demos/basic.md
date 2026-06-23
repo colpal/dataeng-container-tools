@@ -37,7 +37,7 @@ ENV UV_PYTHON_INSTALL_DIR="/app/python"
 
 uv sync --frozen --no-dev --no-cache --compile-bytecode
 
-FROM debian:trixie-slim
+FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/debian:trixie-slim
 
 WORKDIR /app
 

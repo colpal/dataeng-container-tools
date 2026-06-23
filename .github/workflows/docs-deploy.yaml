@@ -55,7 +55,7 @@ jobs:
             uv run mike deploy --push --update-aliases --alias-type=copy $STEPS_VERSION_OUTPUTS_VERSION $STEPS_VERSION_OUTPUTS_ALIAS
             uv run mike set-default --push latest
           else
-            uv run mike deploy --push $STEPS_VERSION_OUTPUTS_VERSION
+            uv run mike deploy --push --update-aliases --alias-type=copy v1.0.0 latest
           fi
         env:
           STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}

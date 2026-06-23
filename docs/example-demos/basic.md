@@ -16,13 +16,13 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-dataeng-container-tools = { git = "https://github.com/colpal/dataeng-container-tools.git", rev = "v1.0.0-alpha.7" }
+dataeng-container-tools = { git = "https://github.com/colpal/dataeng-container-tools.git", rev = "v1.0.0" }
 ```
 
 ## Dockerfile
 
 ```dockerfile
-FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/astral/uv:0.10.7-python3.13-trixie-slim AS builder
+FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/astral/uv:0.11.23-python3.13-trixie-slim AS builder
 
 WORKDIR /app
 
@@ -37,7 +37,7 @@ ENV UV_PYTHON_INSTALL_DIR="/app/python"
 
 uv sync --frozen --no-dev --no-cache --compile-bytecode
 
-FROM debian:trixie-slim
+FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/debian:trixie-slim
 
 WORKDIR /app
 

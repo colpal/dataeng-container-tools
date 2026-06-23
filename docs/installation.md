@@ -26,6 +26,8 @@ The following optional dependencies are available:
 
 - `snowflake`
 - `polars`
+- `datastore`
+- `excel`
 
 To install additional optional dependencies:
 

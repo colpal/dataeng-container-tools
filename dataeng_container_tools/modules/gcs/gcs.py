@@ -155,6 +155,11 @@ class GCSFileIO(BaseModule):
     objects or local files to GCS. It also includes helper functions for
     common GCS operations.
 
+    Data is read and written with pandas by default; pass `engine="polars"` to
+    use polars instead. Some formats and engines require optional extras:
+    `dataeng-container-tools[polars]` for the polars engine and
+    `dataeng-container-tools[excel]` for `.xlsx` support.
+
     Attributes:
         client: The Google Cloud Storage client instance.
         local: A boolean indicating if the module is in local-only mode.

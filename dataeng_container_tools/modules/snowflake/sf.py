@@ -21,16 +21,42 @@ if TYPE_CHECKING:
 
 
 class Snowflake(BaseModule):
-    """Handles Snowflake operations.
+    """Wrapper around the Snowflake Python connector.
 
-    This class creates a connection to a Snowflake table and executes custom queries entered.
+    Opens a connection using credentials resolved from a secret file and exposes
+    a simple `execute` helper. The authentication method (key-pair or password)
+    is inferred from the credentials: if the secret contains an `rsa_private_key`,
+    key-pair auth is used, otherwise the `password` field is used.
+
+    For full control, the underlying connection is available as `ctx`. The class
+    can also be used as a context manager to close the connection automatically.
+
+    Requires the `snowflake` extra: `dataeng-container-tools[snowflake]`.
 
     Attributes:
-        account: Snowflake account used for connection
-        role: Snowflake role needed for connection
-        database: Snowflake database the user wants to connect to
-        schema: Snowflake schema the user wants to connect to
-        warehouse: Snowflake warehouse the user wants to connect to
+        account: Snowflake account used for the connection.
+        role: Snowflake role used for the connection.
+        database: Snowflake database to connect to.
+        schema: Snowflake schema to connect to.
+        warehouse: Snowflake warehouse to connect to.
+        user: Username read from the credentials secret.
+        ctx: The underlying `snowflake.connector.SnowflakeConnection`.
+
+    Examples:
+        Run a query with the convenience helper:
+            >>> sf = Snowflake(
+            ...     account="my_account",
+            ...     database="MY_DB",
+            ...     schema="PUBLIC",
+            ...     warehouse="MY_WH",
+            ...     role="MY_ROLE",
+            ... )
+            >>> rows = sf.execute("SELECT * FROM my_table")
+
+        Use as a context manager and access the raw connection:
+            >>> with Snowflake("acct", "DB", "PUBLIC", "WH", "ROLE") as sf:
+            ...     cursor = sf.ctx.cursor()
+            ...     cursor.execute("SELECT 1")
     """
 
     MODULE_NAME: ClassVar[str] = "SF"
@@ -54,7 +80,31 @@ class Snowflake(BaseModule):
         use_file_fallback: bool = True,
         **kwargs: Any,
     ) -> None:
-        """Initialize a snowflake connection."""
+        """Initialize a Snowflake connection.
+
+        Credentials are resolved from the first available source: `sf_secret_location`,
+        then the registered `SecretLocations` entries, then the module default paths.
+        The credentials JSON must contain a `username` and either an `rsa_private_key`
+        (key-pair auth) or a `password`.
+
+        Args:
+            account: Snowflake account identifier.
+            database: Database to connect to.
+            schema: Schema to connect to.
+            warehouse: Warehouse to use.
+            role: Role to assume.
+            sf_secret_location: Explicit path to the credentials JSON. If omitted,
+                the fallbacks described above are used.
+            use_cla_fallback: Whether to fall back to `SecretLocations` paths.
+            use_file_fallback: Whether to fall back to the module default secret paths.
+            **kwargs: Extra keyword arguments forwarded to
+                `snowflake.connector.connect` (e.g. `query_tag`, `session_parameters`).
+
+        Raises:
+            ImportError: If the `snowflake` extra is not installed.
+            FileNotFoundError: If no credentials could be resolved.
+            TypeError: If the resolved credentials are not a JSON object.
+        """
         try:
             import snowflake.connector as sc
         except ImportError as e:
@@ -118,7 +168,18 @@ class Snowflake(BaseModule):
         )
 
     def execute(self, query: str) -> list[tuple] | list[dict]:
-        """Executes a query and returns the results."""
+        """Execute a single query and return all rows.
+
+        Opens a cursor, runs the query, fetches every row, and closes the cursor.
+        For streaming large result sets or multi-statement execution, use `ctx`
+        directly instead.
+
+        Args:
+            query: The SQL statement to execute.
+
+        Returns:
+            All fetched rows. Each row is a tuple by default.
+        """
         cursor = self.ctx.cursor()
         try:
             cursor.execute(query)

@@ -406,7 +406,7 @@ class CommandLineArguments:
             are of the format "gs://bucket_name/input_path/filename".
 
         """
-        if not self.__input_files:
+        if self.__input_files is CommandLineArgumentType.UNUSED:
             return []
 
         return GCSUriUtils.build_uris(
@@ -423,7 +423,7 @@ class CommandLineArguments:
             are of the format "gs://bucket_name/output_path/filename".
 
         """
-        if not self.__output_files:
+        if self.__output_files is CommandLineArgumentType.UNUSED:
             return []
 
         return GCSUriUtils.build_uris(

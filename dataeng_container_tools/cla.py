@@ -399,12 +399,18 @@ class CommandLineArguments:
         return self.__args
 
     def get_input_uris(self) -> list[str]:
-        """Retrieve the input URIs passed in through the command line.
+        """Retrieve the input file locations as fully formed GCS URIs.
+
+        Combines the `--input_bucket_names`, `--input_paths`, and `--input_filenames`
+        args into URIs of the format "gs://bucket_name/input_path/filename", one per
+        filename. A single bucket or path is broadcast across all files.
 
         Returns:
-            A list of all input URIs passed in through the command line. URIs
-            are of the format "gs://bucket_name/input_path/filename".
+            The list of input URIs, or an empty list if `input_files` is UNUSED.
 
+        Raises:
+            ValueError: If the counts of buckets, paths, and filenames are
+                incompatible. See `GCSUriUtils.build_uris`.
         """
         if self.__input_files is CommandLineArgumentType.UNUSED:
             return []
@@ -416,12 +422,18 @@ class CommandLineArguments:
         )
 
     def get_output_uris(self) -> list[str]:
-        """Retrieve the output URIs passed in through the command line.
+        """Retrieve the output file locations as fully-formed GCS URIs.
+
+        Combines the `--output_bucket_names`, `--output_paths`, and `--output_filenames`
+        args into URIs of the format "gs://bucket_name/output_path/filename", one per
+        filename. A single bucket or path is broadcast across all files.
 
         Returns:
-            A list of all output URIs passed in through the command line. URIs
-            are of the format "gs://bucket_name/output_path/filename".
+            The list of output URIs, or an empty list if `output_files` is UNUSED.
 
+        Raises:
+            ValueError: If the counts of buckets, paths, and filenames are
+                incompatible. See `GCSUriUtils.build_uris`.
         """
         if self.__output_files is CommandLineArgumentType.UNUSED:
             return []

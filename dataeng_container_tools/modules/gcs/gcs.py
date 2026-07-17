@@ -352,7 +352,7 @@ class GCSFileIO(BaseModule):
                 ...     "gs://my-bucket/metadata.json",
                 ...     ("gs://my-bucket/extra.png", "images/extra.png"),
                 ... ])
-                >>> parquet_df = object_dict["my-bucket/ataset.parquet"]
+                >>> parquet_df = object_dict["my-bucket/dataset.parquet"]
                 >>> metadata_obj = object_dict["my-bucket/metadata.json"] # Likely an io.BytesIO object
         """
         # Convert to lists for simplification

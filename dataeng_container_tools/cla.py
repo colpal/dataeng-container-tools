@@ -240,7 +240,7 @@ class CommandLineArguments:
         self.__output_files = output_files
         self.__identifying_tags = identifying_tags
         self.__description = description
-        parser = parser if parser else argparse.ArgumentParser(description=description)
+        parser = parser or argparse.ArgumentParser(description=description)
 
         self.__add_generic_args(parser)
         self.__add_container_args(parser)

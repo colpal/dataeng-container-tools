@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "A package containing tools for data engineering containers."
 readme = "README.md"
 maintainers = [
-    { name = "CP DE Team", email = "git_data_science_engineering@colpal.com" },
+    { name = "CP DE Team", email = "airflow_app_owners@colpal.com" },
 ]
 requires-python = ">=3.10"
 license = { text = "MIT License" }

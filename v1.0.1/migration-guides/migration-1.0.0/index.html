@@ -1,0 +1,2755 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A package containing tools for data engineering containers">
+      
+      
+      
+        <link rel="canonical" href="https://dataeng-container-tools-515523808041.us-east4.run.app/v1.0.1/migration-guides/migration-1.0.0/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Migration to 1.0.0 - Data-Engineering Container Tools</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#migration-guide-064-to-100" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Data-Engineering Container Tools" class="md-header__button md-logo" aria-label="Data-Engineering Container Tools" data-md-component="logo">
+      
+  <img src="../../img/logo-dark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Data-Engineering Container Tools
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Migration to 1.0.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/colpal/dataeng-container-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    colpal/dataeng-container-tools
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../introduction/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Introduction
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../modules/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Modules
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../example-demos/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Example Demos
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Migration Guides
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/dataeng_container_tools/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Data-Engineering Container Tools" class="md-nav__button md-logo" aria-label="Data-Engineering Container Tools" data-md-component="logo">
+      
+  <img src="../../img/logo-dark.svg" alt="logo">
+
+    </a>
+    Data-Engineering Container Tools
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/colpal/dataeng-container-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    colpal/dataeng-container-tools
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../modules/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/command-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Arguments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/secrets-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Secrets Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/gcs-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCS Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/datastore-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datastore Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/downloader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downloader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/container-utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container Utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modules/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../example-demos/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Demos
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Example Demos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../example-demos/basic.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migration Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration to 1.0.0
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration to 1.0.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports-and-renames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports and Renames
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-arguments-cla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Line Arguments (CLA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Arguments (CLA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-local" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Local
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GCS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GCS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#downloading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downloading
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uploading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secrets-and-safe-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secrets and Safe Output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Secrets and Safe Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#secret-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secret Locations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parsing-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parsing Secrets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datastore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datastore
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../contributing/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/creating-modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dataeng_container_tools
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    dataeng_container_tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/cla/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cla
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/container_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    container_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/log_utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    log_utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/modules/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    modules
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4" id="__nav_8_1_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/modules/base_module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    base_module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/modules/datastore/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    datastore
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4_2" id="__nav_8_1_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    datastore
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/modules/datastore/datastore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    datastore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/modules/download/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    download
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4_3" id="__nav_8_1_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    download
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/modules/download/download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    download
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1_4_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/modules/gcs/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gcs
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4_4" id="__nav_8_1_4_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    gcs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/modules/gcs/gcs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gcs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_1_4_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/dataeng_container_tools/modules/snowflake/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    snowflake
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1_4_5" id="__nav_8_1_4_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_8_1_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    snowflake
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/modules/snowflake/sf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sf
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/safe_textio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    safe_textio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/dataeng_container_tools/secrets_manager/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    secrets_manager
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imports-and-renames" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports and Renames
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-arguments-cla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Line Arguments (CLA)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Arguments (CLA)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-local" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Local
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GCS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GCS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#downloading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downloading
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uploading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uploading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#secrets-and-safe-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secrets and Safe Output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Secrets and Safe Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#secret-locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secret Locations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parsing-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parsing Secrets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safe-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datastore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datastore
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery Alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/colpal/dataeng-container-tools/edit/main/docs/migration-guides/migration-1.0.0.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="migration-guide-064-to-100">Migration Guide: 0.6.4 to 1.0.0<a class="headerlink" href="#migration-guide-064-to-100" title="Permanent link">&para;</a></h1>
+<p>This guide covers the important changes when migrating a container from DataEng Container Tools <code>v0.6.4</code> to <code>v1.0.0</code>.</p>
+<p><code>v1.0.0</code> is a large, breaking release. The package was restructured, most classes were renamed to <code>PascalCase</code>, several modules were removed, and the two most used modules (CLA and GCS) changed their public APIs significantly.</p>
+<h2 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The importable package was renamed from <code>dataEng_container_tools</code> to <code>dataeng_container_tools</code>.</li>
+<li>All public classes are now importable directly from the top-level package (e.g. <code>from dataeng_container_tools import GCSFileIO</code>).</li>
+<li>Classes were renamed from <code>snake_case</code> to <code>PascalCase</code>.</li>
+<li>Secret handling moved to a dedicated <code>SecretManager</code> / <code>SecretLocations</code> system.</li>
+<li>The GCS file operations collapsed from eight methods into <code>download</code> and <code>upload</code>.</li>
+<li>The <code>BQ</code>, <code>simple_setup</code>, and <code>exceptions</code> modules were removed.</li>
+<li>Python 3.7-3.9 support was dropped; <code>v1.0.0</code> requires Python 3.10 or higher.</li>
+<li>New optional modules were added: <a href="../../modules/snowflake/">Snowflake</a> and <a href="../../modules/downloader/">Download</a>.</li>
+</ul>
+<h2 id="imports-and-renames">Imports and Renames<a class="headerlink" href="#imports-and-renames" title="Permanent link">&para;</a></h2>
+<p>The importable package name changed, and everything is now available from the top level.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.cla</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">command_line_arguments</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">command_line_argument_type</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.gcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcs_file_io</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">CommandLineArguments</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">CommandLineArgumentType</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">GCSFileIO</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>The following files, classes, and functions have been renamed or relocated:</p>
+<table>
+<thead>
+<tr>
+<th>Old (<code>v0.6.4</code>)</th>
+<th>New (<code>v1.0.0</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cla.custom_command_line_argument</code></td>
+<td><code>CustomCommandLineArgument</code></td>
+</tr>
+<tr>
+<td><code>cla.command_line_argument_type</code></td>
+<td><code>CommandLineArgumentType</code></td>
+</tr>
+<tr>
+<td><code>cla.command_line_secret</code></td>
+<td><code>secrets_manager.SecretLocations</code></td>
+</tr>
+<tr>
+<td><code>cla.command_line_arguments</code></td>
+<td><code>CommandLineArguments</code></td>
+</tr>
+<tr>
+<td><code>cla.command_line_arguments.get_secret_locations</code></td>
+<td><code>secrets_manager.SecretLocations</code></td>
+</tr>
+<tr>
+<td><code>cla.command_line_arguments.get_secrets</code></td>
+<td><code>secrets_manager.SecretManager.secrets</code></td>
+</tr>
+<tr>
+<td><code>gcs.gcs_file_io</code></td>
+<td><code>modules.gcs.GCSFileIO</code></td>
+</tr>
+<tr>
+<td><code>gcs.gcs_file_io.__get_parts</code></td>
+<td><code>modules.gcs.GCSUriUtils.get_components</code></td>
+</tr>
+<tr>
+<td><code>db.Db</code></td>
+<td><code>modules.datastore.Datastore</code></td>
+</tr>
+<tr>
+<td><code>safe_stdout.safe_stdout</code></td>
+<td><code>safe_textio.SafeTextIO</code></td>
+</tr>
+<tr>
+<td><code>safe_stdout.safe_stdout.add_words</code></td>
+<td><code>safe_textio.SafeTextIO.add_words</code> (classmethod)</td>
+</tr>
+<tr>
+<td><code>safe_stdout.setup_default_stdout</code></td>
+<td><code>safe_textio.setup_default_stdio</code></td>
+</tr>
+<tr>
+<td><code>safe_stdout.setup_stdout</code></td>
+<td><code>secrets_manager.SecretManager.process_secret_folder</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="removed">Removed<a class="headerlink" href="#removed" title="Permanent link">&para;</a></h2>
+<p>The following were removed entirely in <code>v1.0.0</code>:</p>
+<ul>
+<li>Python 3.7-3.9 support.</li>
+<li>The <code>BQ</code> (BigQuery) module and <code>bq.py</code>. See <a href="#bigquery-alternative">BigQuery Alternative</a>.</li>
+<li>The <code>simple_setup</code> module and <code>simple_setup.py</code>.</li>
+<li>The <code>exceptions</code> module and <code>exceptions.py</code>.</li>
+<li><code>CommandLineArguments.check_args</code> (was a no-op).</li>
+<li><code>CommandLineArguments.get_pandas_kwargs</code>, the <code>--input_pandas_kwargs</code> / <code>--output_pandas_kwargs</code> args, and their <code>input_pandas_kwargs</code> / <code>output_pandas_kwargs</code> init parameters.</li>
+<li>The <code>--input_dtypes</code> arg and <code>get_input_dtypes</code>, along with the <code>input_dtypes</code> and <code>default_file_type</code> init parameters.</li>
+<li>The <code>--input_delimiters</code> / <code>--output_delimiters</code> args.</li>
+<li>The GCS <code>local=True</code> local-filesystem behavior (the flag still exists but now targets an emulator, see <a href="#gcs">GCS</a>).</li>
+<li><code>pickle</code> / <code>pkl</code> support in GCS (removed for security reasons).</li>
+</ul>
+<h2 id="command-line-arguments-cla">Command Line Arguments (CLA)<a class="headerlink" href="#command-line-arguments-cla" title="Permanent link">&para;</a></h2>
+<p><code>command_line_arguments</code> became <a href="../../modules/command-line/"><code>CommandLineArguments</code></a>. The most impactful changes:</p>
+<ul>
+<li>Preset arguments are now keyword only (only <code>custom_args</code> is positional).</li>
+<li><code>custom_inputs</code> was renamed to <code>custom_args</code>.</li>
+<li><code>parse_known_args</code> now defaults to <code>True</code>, so unknown extra arguments are ignored instead of raising.</li>
+<li><code>CommandLineArgumentType</code> gained an explicit <code>UNUSED</code> member (the default), replacing the implicit <code>None</code>.</li>
+<li>Secret retrieval helpers were removed in favor of <a href="#secrets-and-safe-output"><code>SecretLocations</code></a>.</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.cla</span><span class="w"> </span><span class="kn">import</span> <span class="n">command_line_arguments</span><span class="p">,</span> <span class="n">command_line_argument_type</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">my_inputs</span> <span class="o">=</span> <span class="n">command_line_arguments</span><span class="p">(</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">secret_locations</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">input_files</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">output_files</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">input_uris</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_input_uris</span><span class="p">()</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">output_uris</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_output_uris</span><span class="p">()</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">secret_locations</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_secret_locations</span><span class="p">()</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">CommandLineArguments</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">CommandLineArgumentType</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">SecretLocations</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">)</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="n">CommandLineArguments</span><span class="p">(</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="n">secret_locations</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    <span class="n">input_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    <span class="n">output_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="p">)</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="n">cla</span> <span class="o">=</span> <span class="n">CommandLineArguments</span><span class="p">()</span>  <span class="c1"># Singleton, returns the same instance</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="n">input_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_input_uris</span><span class="p">()</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="n">output_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_output_uris</span><span class="p">()</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="n">secret_locations</span> <span class="o">=</span> <span class="n">SecretLocations</span><span class="p">()</span>  <span class="c1"># Populated automatically from --secret_locations</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>CommandLineArguments</code> is now a singleton. Constructing it once configures the parser; subsequent calls return the same instance.</p>
+</div>
+<h3 id="custom-arguments">Custom Arguments<a class="headerlink" href="#custom-arguments" title="Permanent link">&para;</a></h3>
+<p><code>CustomCommandLineArgument</code> renamed two of its parameters to align with <code>argparse</code>:</p>
+<ul>
+<li><code>data_type</code> -&gt; <code>type</code></li>
+<li><code>help_message</code> -&gt; <code>help</code></li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.cla</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom_command_line_argument</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">arg</span> <span class="o">=</span> <span class="n">custom_command_line_argument</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">data_type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">help_message</span><span class="o">=</span><span class="s2">&quot;Items per batch&quot;</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">CustomCommandLineArgument</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">arg</span> <span class="o">=</span> <span class="n">CustomCommandLineArgument</span><span class="p">(</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Items per batch&quot;</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="running-local">Running Local<a class="headerlink" href="#running-local" title="Permanent link">&para;</a></h3>
+<p>The <code>running_local</code> argument was removed. Use the <a href="../../modules/container-utils/"><code>IS_LOCAL</code></a> constant, which detects the container environment automatically.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Before (v0.6.4): passed running_local into command_line_arguments / gcs_file_io</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">IS_LOCAL</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">if</span> <span class="n">IS_LOCAL</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="o">...</span>
+</span></code></pre></div>
+<h2 id="gcs">GCS<a class="headerlink" href="#gcs" title="Permanent link">&para;</a></h2>
+<p><code>gcs_file_io</code> became <a href="../../modules/gcs-operations/"><code>GCSFileIO</code></a>, and the eight download/upload methods were consolidated into two.</p>
+<table>
+<thead>
+<tr>
+<th>Old (<code>v0.6.4</code>)</th>
+<th>New (<code>v1.0.0</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>download_file_to_object</code>, <code>download_files_to_objects</code>, <code>download_file_to_disk</code>, <code>download_files_to_disk</code></td>
+<td><code>download</code></td>
+</tr>
+<tr>
+<td><code>upload_file_from_object</code>, <code>upload_files_from_objects</code>, <code>upload_file_from_disk</code>, <code>upload_files_from_disk</code></td>
+<td><code>upload</code></td>
+</tr>
+</tbody>
+</table>
+<p>Other changes:</p>
+<ul>
+<li><code>gcs_secret_location</code> is now optional. If omitted, credentials are resolved from <a href="#secrets-and-safe-output"><code>SecretLocations</code></a> and then the default path <code>/vault/secrets/gcp-sa-storage.json</code>.</li>
+<li><code>download</code> returns a <code>dict</code> keyed by the object path (<code>{"bucket/path/file.csv": DataFrame}</code>), rather than a bare object or list.</li>
+<li>Whether an operation targets an object or a local file is decided by the shape of the argument you pass (a URI string versus a <code>(source, destination)</code> tuple).</li>
+<li><code>pkl</code> / <code>pickle</code> is no longer supported.</li>
+<li><code>local=True</code> no longer reads/writes the local filesystem directly; it now points the client at a GCS emulator. Use <a href="https://docs.python.org/3/library/pathlib.html"><code>pathlib</code></a> for plain local files.</li>
+</ul>
+<h3 id="downloading">Downloading<a class="headerlink" href="#downloading" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.gcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcs_file_io</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">file_io</span> <span class="o">=</span> <span class="n">gcs_file_io</span><span class="p">(</span><span class="n">gcs_secret_location</span><span class="o">=</span><span class="n">secret_locations</span><span class="o">.</span><span class="n">GCS</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">df</span> <span class="o">=</span> <span class="n">file_io</span><span class="o">.</span><span class="n">download_file_to_object</span><span class="p">(</span><span class="s2">&quot;gs://my-bucket/data.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">GCSFileIO</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">gcs</span> <span class="o">=</span> <span class="n">GCSFileIO</span><span class="p">()</span>  <span class="c1"># secret resolved automatically</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">df</span><span class="p">,</span> <span class="o">=</span> <span class="n">gcs</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;gs://my-bucket/data.csv&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Download straight to a local file with a (source, destination) tuple</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">gcs</span><span class="o">.</span><span class="n">download</span><span class="p">((</span><span class="s2">&quot;gs://my-bucket/data.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;./data.csv&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+<h3 id="uploading">Uploading<a class="headerlink" href="#uploading" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">result</span> <span class="o">=</span> <span class="n">file_io</span><span class="o">.</span><span class="n">upload_file_from_object</span><span class="p">(</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">gcs_uri</span><span class="o">=</span><span class="s2">&quot;gs://my-bucket/out.csv&quot;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">object_to_upload</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># After (v1.0.0): pass a (source, destination) tuple</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">((</span><span class="n">df</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/out.csv&quot;</span><span class="p">))</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># Upload a local file by passing a path as the source</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">((</span><span class="s2">&quot;./out.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/out.csv&quot;</span><span class="p">))</span>
+</span></code></pre></div>
+<p>Both <code>download</code> and <code>upload</code> accept a list of tuples for batch operations. See <a href="../../modules/gcs-operations/">GCS Operations</a> for globs, metadata, batching, and file-format details.</p>
+<h2 id="secrets-and-safe-output">Secrets and Safe Output<a class="headerlink" href="#secrets-and-safe-output" title="Permanent link">&para;</a></h2>
+<p>Secret discovery, storage, and output censoring were split into <a href="../../modules/secrets-handling/"><code>SecretManager</code>, <code>SecretLocations</code>, and <code>SafeTextIO</code></a>.</p>
+<h3 id="secret-locations">Secret Locations<a class="headerlink" href="#secret-locations" title="Permanent link">&para;</a></h3>
+<p><code>command_line_secret</code> (with its <code>GCS</code> / <code>BQ</code> attributes) became the <a href="../../modules/secrets-handling/"><code>SecretLocations</code></a> singleton, which exposes <code>GCS</code>, <code>SF</code>, and <code>DS</code> (note <code>BQ</code> is gone). It is populated automatically when <code>CommandLineArguments</code> parses <code>--secret_locations</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">secret_locations</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_secret_locations</span><span class="p">()</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">gcs_secret</span> <span class="o">=</span> <span class="n">secret_locations</span><span class="o">.</span><span class="n">GCS</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecretLocations</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">gcs_secret</span> <span class="o">=</span> <span class="n">SecretLocations</span><span class="p">()</span><span class="o">.</span><span class="n">GCS</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">sf_secret</span> <span class="o">=</span> <span class="n">SecretLocations</span><span class="p">()</span><span class="o">.</span><span class="n">SF</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="n">custom_secret</span> <span class="o">=</span> <span class="n">SecretLocations</span><span class="p">()[</span><span class="s2">&quot;CUSTOM&quot;</span><span class="p">]</span>  <span class="c1"># keys added via --secret_locations</span>
+</span></code></pre></div>
+<h3 id="parsing-secrets">Parsing Secrets<a class="headerlink" href="#parsing-secrets" title="Permanent link">&para;</a></h3>
+<p><code>command_line_arguments.get_secrets</code> and <code>safe_stdout.setup_stdout</code> were replaced by <code>SecretManager</code>. Secrets in <code>/vault/secrets/</code> are parsed automatically on import; the parsed values are available on <code>SecretManager.secrets</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">secrets</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_secrets</span><span class="p">()</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecretManager</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">all_secrets</span> <span class="o">=</span> <span class="n">SecretManager</span><span class="o">.</span><span class="n">secrets</span>  <span class="c1"># dict keyed by file path</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">one_secret</span> <span class="o">=</span> <span class="n">SecretManager</span><span class="o">.</span><span class="n">parse_secret</span><span class="p">(</span><span class="s2">&quot;/vault/secrets/api_key&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="safe-output">Safe Output<a class="headerlink" href="#safe-output" title="Permanent link">&para;</a></h3>
+<p><code>safe_stdout</code> became <a href="../../modules/secrets-handling/"><code>SafeTextIO</code></a>. <code>sys.stdout</code> and <code>sys.stderr</code> are wrapped automatically on import via <code>setup_default_stdio</code> (formerly <code>setup_default_stdout</code>). <code>add_words</code> is now a classmethod that applies to all instances, and the constructor requires the <code>textio</code> stream it wraps.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">add_words</span><span class="p">([</span><span class="s2">&quot;my_secret&quot;</span><span class="p">])</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">SafeTextIO</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">SafeTextIO</span><span class="o">.</span><span class="n">add_words</span><span class="p">([</span><span class="s2">&quot;my_secret&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Secrets parsed by <code>SecretManager</code> are added to <code>SafeTextIO</code> automatically, so you rarely need to call <code>add_words</code> yourself.</p>
+</div>
+<h2 id="datastore">Datastore<a class="headerlink" href="#datastore" title="Permanent link">&para;</a></h2>
+<p><code>db.Db</code> became <a href="../../modules/datastore-operations/"><code>Datastore</code></a> and requires the <code>datastore</code> extra. The Datastore client is now created and held internally, so you no longer construct or pass a <code>client</code> around. <code>get_secrets</code> and <code>get_data_store_client</code> were removed.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">Db</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">db</span> <span class="o">=</span> <span class="n">Db</span><span class="p">(</span><span class="n">task_kind</span><span class="o">=</span><span class="s2">&quot;MyTask&quot;</span><span class="p">)</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">client</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_data_store_client</span><span class="p">(</span><span class="s2">&quot;/path/to/credentials.json&quot;</span><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">entries</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_task_entry</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">filter_map</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;MyTask&quot;</span><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">db</span><span class="o">.</span><span class="n">handle_task</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">Datastore</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">ds</span> <span class="o">=</span> <span class="n">Datastore</span><span class="p">(</span><span class="n">task_kind</span><span class="o">=</span><span class="s2">&quot;MyTask&quot;</span><span class="p">,</span> <span class="n">gcp_secret_location</span><span class="o">=</span><span class="s2">&quot;/path/to/credentials.json&quot;</span><span class="p">)</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">entries</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">get_task_entry</span><span class="p">(</span><span class="n">filter_map</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;MyTask&quot;</span><span class="p">)</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">ds</span><span class="o">.</span><span class="n">handle_task</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="bigquery-alternative">BigQuery Alternative<a class="headerlink" href="#bigquery-alternative" title="Permanent link">&para;</a></h2>
+<p>The <code>BQ</code> module was removed. There is no drop in replacement in <code>v1.0.0</code>. Options:</p>
+<ul>
+<li>Use the <a href="https://cloud.google.com/python/docs/reference/bigquery/latest"><code>google-cloud-bigquery</code></a> client directly, authenticating with a secret resolved via <code>SecretLocations</code>.</li>
+</ul>
+<h2 id="full-example">Full Example<a class="headerlink" href="#full-example" title="Permanent link">&para;</a></h2>
+<p>A minimal end-to-end container, before and after.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Before (v0.6.4)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.cla</span><span class="w"> </span><span class="kn">import</span> <span class="n">command_line_arguments</span><span class="p">,</span> <span class="n">command_line_argument_type</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataEng_container_tools.gcs</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcs_file_io</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">my_inputs</span> <span class="o">=</span> <span class="n">command_line_arguments</span><span class="p">(</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">secret_locations</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">input_files</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">output_files</span><span class="o">=</span><span class="n">command_line_argument_type</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="p">)</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">input_uris</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_input_uris</span><span class="p">()</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">output_uris</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_output_uris</span><span class="p">()</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="n">secret_locations</span> <span class="o">=</span> <span class="n">my_inputs</span><span class="o">.</span><span class="n">get_secret_locations</span><span class="p">()</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="n">file_io</span> <span class="o">=</span> <span class="n">gcs_file_io</span><span class="p">(</span><span class="n">gcs_secret_location</span><span class="o">=</span><span class="n">secret_locations</span><span class="o">.</span><span class="n">GCS</span><span class="p">)</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="n">df</span> <span class="o">=</span> <span class="n">file_io</span><span class="o">.</span><span class="n">download_file_to_object</span><span class="p">(</span><span class="n">input_uris</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="c1"># Edit df here.</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="n">file_io</span><span class="o">.</span><span class="n">upload_file_from_object</span><span class="p">(</span><span class="n">gcs_uri</span><span class="o">=</span><span class="n">output_uris</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">object_to_upload</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># After (v1.0.0)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">CommandLineArguments</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">CommandLineArgumentType</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">GCSFileIO</span><span class="p">,</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">CommandLineArguments</span><span class="p">(</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="n">secret_locations</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="n">input_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="n">output_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="p">)</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="n">cla</span> <span class="o">=</span> <span class="n">CommandLineArguments</span><span class="p">()</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="n">input_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_input_uris</span><span class="p">()</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="n">output_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_output_uris</span><span class="p">()</span>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="n">gcs</span> <span class="o">=</span> <span class="n">GCSFileIO</span><span class="p">()</span>  <span class="c1"># credentials resolved automatically from SecretLocations</span>
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="n">df</span><span class="p">,</span> <span class="o">=</span> <span class="n">gcs</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">input_uris</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="c1"># Edit df here.</span>
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">((</span><span class="n">df</span><span class="p">,</span> <span class="n">output_uris</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+</span></code></pre></div>
+<p>For deeper details on any module, see the <a href="../../modules/">Modules</a> section.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Colpal
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

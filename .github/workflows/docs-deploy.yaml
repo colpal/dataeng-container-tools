@@ -67,7 +67,7 @@ jobs:
 
   deploy-dev:
     needs: [deploy-version]
-    if: always() && (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped')
+    if: always() && !startsWith(github.ref, 'refs/tags/') && (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped')
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -98,7 +98,7 @@ jobs:
     if: |
       always() &&
       (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped') &&
-      (needs.deploy-dev.result == 'success' || needs.deploy-dev.result == 'failure')
+      (needs.deploy-dev.result == 'success' || needs.deploy-dev.result == 'failure' || needs.deploy-dev.result == 'skipped')
     permissions:
       id-token: write
     runs-on: ubuntu-latest

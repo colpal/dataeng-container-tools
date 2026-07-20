@@ -1009,7 +1009,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../example-demos/basic/" class="md-nav__link">
+      <a href="../../example-demos/basic.md" class="md-nav__link">
         
   
   
@@ -2278,7 +2278,7 @@
 </span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="n">df</span><span class="p">,</span> <span class="o">=</span> <span class="n">gcs</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;gs://my-bucket/data1.csv&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
 </span></code></pre></div>
 <h2 id="upload-section">Upload<a class="headerlink" href="#upload-section" title="Permanent link">&para;</a></h2>
-<p>The syntax for uploading is similar to downloading, but now <code>src_to_dst</code> only takes in a tuple or list of tuples in the format <code>(source_file, destination_gcs_uri)</code> or <code>(source_object, destination_gcs_uri)</code>.</p>
+<p>The syntax for uploading is similar to downloading, but now <code>src_dst</code> only takes in a tuple or list of tuples in the format <code>(source_file, destination_gcs_uri)</code> or <code>(source_object, destination_gcs_uri)</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Say we have some_df DataFrame and ./data1.csv file</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">some_df</span> <span class="o">=</span> <span class="o">...</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
@@ -2327,7 +2327,7 @@
 </span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Download a file from GCS to a local file (notice no return unlike with to object)</span>
 </span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">gcs</span><span class="o">.</span><span class="n">download</span><span class="p">((</span><span class="s2">&quot;gs://my-bucket/path/to/data.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;./local-folder/local-file.csv&quot;</span><span class="p">))</span>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Upload a local file to GCS (can also choose to omit the src_to_dst keyword arg)</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Upload a local file to GCS (can also choose to omit the src_dst keyword arg)</span>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">((</span><span class="s2">&quot;./local-folder/local-file.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/other-path/to/data.csv&quot;</span><span class="p">))</span>
 </span></code></pre></div>
 <h2 id="working-with-different-file-formats">Working with Different File Formats<a class="headerlink" href="#working-with-different-file-formats" title="Permanent link">&para;</a></h2>
@@ -2354,7 +2354,7 @@
 </span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">((</span><span class="n">result_df</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/output.parquet&quot;</span><span class="p">))</span>
 </span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>
 </span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="n">gcs</span><span class="o">.</span><span class="n">upload</span><span class="p">(</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>    <span class="n">src_to_dst</span><span class="o">=</span><span class="p">(</span><span class="n">result_df</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/output.csv&quot;</span><span class="p">),</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>    <span class="n">src_dst</span><span class="o">=</span><span class="p">(</span><span class="n">result_df</span><span class="p">,</span> <span class="s2">&quot;gs://my-bucket/output.csv&quot;</span><span class="p">),</span>
 </span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>    <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>    <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 </span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="p">)</span>
@@ -2556,7 +2556,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

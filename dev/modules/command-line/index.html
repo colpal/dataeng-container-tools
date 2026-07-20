@@ -971,7 +971,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../example-demos/basic/" class="md-nav__link">
+      <a href="../../example-demos/basic.md" class="md-nav__link">
         
   
   
@@ -2263,41 +2263,111 @@
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>CUSTOM Secret Path: /different/path/file.json
 </span></code></pre></div>
 <h3 id="input-output">Argument: Input Output<a class="headerlink" href="#input-output" title="Permanent link">&para;</a></h3>
+<p>The <code>input_files</code> and <code>output_files</code> parameters add the standard file location args used to build GCS URIs.</p>
+<ul>
+<li><code>input_files</code> adds <code>--input_bucket_names</code>, <code>--input_paths</code>, and <code>--input_filenames</code>.</li>
+<li><code>output_files</code> adds <code>--output_bucket_names</code>, <code>--output_paths</code>, and <code>--output_filenames</code>.</li>
+</ul>
+<p>Each arg accepts one or more space separated values (<code>nargs="+"</code>). Rather than reading these raw, use the <code>get_input_uris()</code> and <code>get_output_uris()</code> helpers, which assemble them into fully formed <code>gs://bucket/path/filename</code> URIs. These URIs can be passed directly to the <a href="../gcs-operations/">GCS Operations</a> module.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommandLineArguments</span><span class="p">,</span> <span class="n">CommandLineArgumentType</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">cla</span> <span class="o">=</span> <span class="n">CommandLineArguments</span><span class="p">(</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">input_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">output_files</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">input_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_input_uris</span><span class="p">()</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">output_uris</span> <span class="o">=</span> <span class="n">cla</span><span class="o">.</span><span class="n">get_output_uris</span><span class="p">()</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input URIs: </span><span class="si">{</span><span class="n">input_uris</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output URIs: </span><span class="si">{</span><span class="n">output_uris</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>my_script.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span>--input_bucket_names<span class="w"> </span>input-bucket<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span>--input_paths<span class="w"> </span>path/to/inputs<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span>--input_filenames<span class="w"> </span>file1.csv<span class="w"> </span>file2.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span>--output_bucket_names<span class="w"> </span>output-bucket<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span>--output_paths<span class="w"> </span>path/to/outputs<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span>--output_filenames<span class="w"> </span>result.parquet
+</span></code></pre></div>
+<p>Output:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Input URIs: [&#39;gs://input-bucket/path/to/inputs/file1.csv&#39;, &#39;gs://input-bucket/path/to/inputs/file2.csv&#39;]
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Output URIs: [&#39;gs://output-bucket/path/to/outputs/result.parquet&#39;]
+</span></code></pre></div>
+<h4 id="broadcasting">Broadcasting<a class="headerlink" href="#broadcasting" title="Permanent link">&para;</a></h4>
+<p>The three components are combined per file, with one URI produced per filename. To avoid repeating shared values, a single <code>bucket_name</code> or a single <code>path</code> is broadcast across every file:</p>
+<ul>
+<li>If exactly one bucket is given, it is reused for all files. Otherwise, the number of buckets must equal the number of filenames.</li>
+<li>If exactly one path is given, it is reused for all files. Otherwise, the number of paths must equal the number of buckets.</li>
+<li>Mismatched counts raise a <code>ValueError</code>.</li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># One bucket and one path broadcast across two files</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>python<span class="w"> </span>my_script.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span>--input_bucket_names<span class="w"> </span>shared-bucket<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span>--input_paths<span class="w"> </span>shared/path<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span>--input_filenames<span class="w"> </span>a.csv<span class="w"> </span>b.csv
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Input URIs: [&#39;gs://shared-bucket/shared/path/a.csv&#39;, &#39;gs://shared-bucket/shared/path/b.csv&#39;]
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Per-file buckets and paths (1:1:1)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>python<span class="w"> </span>my_script.py<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span>--input_bucket_names<span class="w"> </span>bucket-a<span class="w"> </span>bucket-b<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span>--input_paths<span class="w"> </span>path/a<span class="w"> </span>path/b<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span>--input_filenames<span class="w"> </span>a.csv<span class="w"> </span>b.csv
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Input URIs: [&#39;gs://bucket-a/path/a/a.csv&#39;, &#39;gs://bucket-b/path/b/b.csv&#39;]
+</span></code></pre></div>
+<h4 id="partial-components">Partial Components<a class="headerlink" href="#partial-components" title="Permanent link">&para;</a></h4>
+<p>When <code>input_files</code> / <code>output_files</code> is <code>OPTIONAL</code>, you can supply only some of the args:</p>
+<ul>
+<li>Omitting the filenames arg produces bucket (and, if given, path) prefixes, such as <code>gs://bucket/path</code>. This is handy for glob based downloads.</li>
+<li>Supplying only the bucket names arg produces bare bucket URIs, such as <code>gs://bucket</code>.</li>
+</ul>
+<p>The resulting URIs are normalized, so redundant slashes and relative segments (<code>//</code>, <code>/./</code>) are collapsed automatically.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Omitting filenames yields a prefix</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>python<span class="w"> </span>my_script.py<span class="w"> </span>--input_bucket_names<span class="w"> </span>my-bucket<span class="w"> </span>--input_paths<span class="w"> </span>data/subdir
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Input URIs: [&#39;gs://my-bucket/data/subdir&#39;]
+</span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This section is currently under construction (TBD).</p>
+<p>Supplying a filenames arg without a matching paths arg is not supported and raises an error. Provide the paths arg alongside filenames, or omit filenames entirely.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only call <code>get_input_uris()</code> / <code>get_output_uris()</code> when the corresponding <code>input_files</code> / <code>output_files</code> parameter is set to <code>OPTIONAL</code> or <code>REQUIRED</code>. Calling them while the parameter is <code>UNUSED</code> raises an error, since those args were never registered on the parser.</p>
 </div>
 <h3 id="argument-identifying-tags">Argument: Identifying Tags<a class="headerlink" href="#argument-identifying-tags" title="Permanent link">&para;</a></h3>
 <p>The <code>identifying_tags</code> parameter adds <code>--dag_id</code> (str), <code>--run_id</code> (str), <code>--namespace</code> (str), and <code>--pod_name</code> (str) args.</p>
 <p>The value of these args are passed to the env variables <code>DAG_ID</code>, <code>RUN_ID</code>, <code>NAMESPACE</code>, and <code>POD_NAME</code> respectively. These will be passed to modules such as <a href="../gcs-operations/">GCS Operations</a> for uploading metadata.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommandLineArguments</span><span class="p">,</span> <span class="n">CommandLineArgumentType</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># Create command line arguments parser</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">cla</span> <span class="o">=</span> <span class="n">CommandLineArguments</span><span class="p">(</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">identifying_tags</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="p">)</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="c1"># Access environment variables</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">dag_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DAG_ID&quot;</span><span class="p">)</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">run_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;RUN_ID&quot;</span><span class="p">)</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="n">namespace</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;NAMESPACE&quot;</span><span class="p">)</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="n">pod_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;POD_NAME&quot;</span><span class="p">)</span>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DAG_ID: </span><span class="si">{</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RUN_ID: </span><span class="si">{</span><span class="n">run_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NAMESPACE: </span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;POD_NAME: </span><span class="si">{</span><span class="n">pod_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataeng_container_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommandLineArguments</span><span class="p">,</span> <span class="n">CommandLineArgumentType</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1"># Create command line arguments parser</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">cla</span> <span class="o">=</span> <span class="n">CommandLineArguments</span><span class="p">(</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="n">identifying_tags</span><span class="o">=</span><span class="n">CommandLineArgumentType</span><span class="o">.</span><span class="n">OPTIONAL</span><span class="p">,</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="p">)</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="c1"># Access environment variables</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">dag_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DAG_ID&quot;</span><span class="p">)</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="n">run_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;RUN_ID&quot;</span><span class="p">)</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="n">namespace</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;NAMESPACE&quot;</span><span class="p">)</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="n">pod_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;POD_NAME&quot;</span><span class="p">)</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DAG_ID: </span><span class="si">{</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RUN_ID: </span><span class="si">{</span><span class="n">run_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NAMESPACE: </span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;POD_NAME: </span><span class="si">{</span><span class="n">pod_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p>You can then run the script providing some of the identifying tags. Since it's optional, not all tags need to be provided. For example, here we omit <code>--pod_name</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>my_script.py<span class="w"> </span>--dag_id<span class="w"> </span><span class="s2">&quot;my_example_dag&quot;</span><span class="w"> </span>--run_id<span class="w"> </span><span class="s2">&quot;run_20250520&quot;</span><span class="w"> </span>--namespace<span class="w"> </span><span class="s2">&quot;prod&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>python<span class="w"> </span>my_script.py<span class="w"> </span>--dag_id<span class="w"> </span><span class="s2">&quot;my_example_dag&quot;</span><span class="w"> </span>--run_id<span class="w"> </span><span class="s2">&quot;run_20250520&quot;</span><span class="w"> </span>--namespace<span class="w"> </span><span class="s2">&quot;prod&quot;</span>
 </span></code></pre></div>
 <p>Output:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>DAG_ID: my_example_dag
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>RUN_ID: run_20250520
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>NAMESPACE: prod
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>POD_NAME: 
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>DAG_ID: my_example_dag
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>RUN_ID: run_20250520
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>NAMESPACE: prod
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>POD_NAME: 
 </span></code></pre></div>
 <h2 id="additional-parameters">Additional Parameters<a class="headerlink" href="#additional-parameters" title="Permanent link">&para;</a></h2>
 <p>Additionally three parameters exist:</p>
@@ -2370,7 +2440,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

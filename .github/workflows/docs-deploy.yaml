@@ -11,6 +11,10 @@ on:
     tags:
       - 'v*.*.*'
 
+concurrency:
+  group: docs-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-version:
     if: startsWith(github.ref, 'refs/tags/')

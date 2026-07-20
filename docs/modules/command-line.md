@@ -190,8 +190,100 @@ CUSTOM Secret Path: /different/path/file.json
 
 ### Argument: Input Output {#input-output}
 
+The `input_files` and `output_files` parameters add the standard file location args used to build GCS URIs.
+
+- `input_files` adds `--input_bucket_names`, `--input_paths`, and `--input_filenames`.
+- `output_files` adds `--output_bucket_names`, `--output_paths`, and `--output_filenames`.
+
+Each arg accepts one or more space separated values (`nargs="+"`). Rather than reading these raw, use the `get_input_uris()` and `get_output_uris()` helpers, which assemble them into fully formed `gs://bucket/path/filename` URIs. These URIs can be passed directly to the [GCS Operations](gcs-operations.md) module.
+
+```python
+from dataeng_container_tools import CommandLineArguments, CommandLineArgumentType
+
+cla = CommandLineArguments(
+    input_files=CommandLineArgumentType.REQUIRED,
+    output_files=CommandLineArgumentType.REQUIRED,
+)
+
+input_uris = cla.get_input_uris()
+output_uris = cla.get_output_uris()
+
+print(f"Input URIs: {input_uris}")
+print(f"Output URIs: {output_uris}")
+```
+
+```bash
+python my_script.py \
+    --input_bucket_names input-bucket \
+    --input_paths path/to/inputs \
+    --input_filenames file1.csv file2.csv \
+    --output_bucket_names output-bucket \
+    --output_paths path/to/outputs \
+    --output_filenames result.parquet
+```
+
+Output:
+
+```text
+Input URIs: ['gs://input-bucket/path/to/inputs/file1.csv', 'gs://input-bucket/path/to/inputs/file2.csv']
+Output URIs: ['gs://output-bucket/path/to/outputs/result.parquet']
+```
+
+#### Broadcasting
+
+The three components are combined per file, with one URI produced per filename. To avoid repeating shared values, a single `bucket_name` or a single `path` is broadcast across every file:
+
+- If exactly one bucket is given, it is reused for all files. Otherwise, the number of buckets must equal the number of filenames.
+- If exactly one path is given, it is reused for all files. Otherwise, the number of paths must equal the number of buckets.
+- Mismatched counts raise a `ValueError`.
+
+```bash
+# One bucket and one path broadcast across two files
+python my_script.py \
+    --input_bucket_names shared-bucket \
+    --input_paths shared/path \
+    --input_filenames a.csv b.csv
+```
+
+```text
+Input URIs: ['gs://shared-bucket/shared/path/a.csv', 'gs://shared-bucket/shared/path/b.csv']
+```
+
+```bash
+# Per-file buckets and paths (1:1:1)
+python my_script.py \
+    --input_bucket_names bucket-a bucket-b \
+    --input_paths path/a path/b \
+    --input_filenames a.csv b.csv
+```
+
+```text
+Input URIs: ['gs://bucket-a/path/a/a.csv', 'gs://bucket-b/path/b/b.csv']
+```
+
+#### Partial Components
+
+When `input_files` / `output_files` is `OPTIONAL`, you can supply only some of the args:
+
+- Omitting the filenames arg produces bucket (and, if given, path) prefixes, such as `gs://bucket/path`. This is handy for glob based downloads.
+- Supplying only the bucket names arg produces bare bucket URIs, such as `gs://bucket`.
+
+The resulting URIs are normalized, so redundant slashes and relative segments (`//`, `/./`) are collapsed automatically.
+
+```bash
+# Omitting filenames yields a prefix
+python my_script.py --input_bucket_names my-bucket --input_paths data/subdir
+```
+
+```text
+Input URIs: ['gs://my-bucket/data/subdir']
+```
+
 !!! warning
-    This section is currently under construction (TBD).
+    Supplying a filenames arg without a matching paths arg is not supported and raises an error. Provide the paths arg alongside filenames, or omit filenames entirely.
+
+!!! note
+    Only call `get_input_uris()` / `get_output_uris()` when the corresponding `input_files` / `output_files` parameter is set to `OPTIONAL` or `REQUIRED`. Calling them while the parameter is `UNUSED` raises an error, since those args were never registered on the parser.
 
 ### Argument: Identifying Tags
 

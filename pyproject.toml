@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "A package containing tools for data engineering containers."
 readme = "README.md"
 maintainers = [
-    { name = "CP DE Team", email = "git_data_science_engineering@colpal.com" },
+    { name = "CP DE Team", email = "airflow_app_owners@colpal.com" },
 ]
 requires-python = ">=3.10"
 license = { text = "MIT License" }
@@ -44,19 +44,19 @@ dev = [
     # Self
     "dataeng-container-tools[datastore,snowflake,polars,excel]",
     # Linting
-    "ruff==0.15.15",
-    "prek==0.4.4",
+    "ruff==0.15.22",
+    "prek==0.4.10",
     # Type stubs
     "types-setuptools",
     "types-psutil==7.2.2.20260518",
-    "types-requests==2.31.0.6",
+    "types-requests==2.33.0.20260712",
     "pandas-stubs==2.3.3.260113",
     # Test
-    "pytest==9.0.3",
+    "pytest==9.1.1",
     "pytest-cov==7.1.0",
     "requests-mock==1.12.1",
-    "fakesnow[server]==0.11.7",
-    "googleapis-storage-testbench @ git+https://github.com/googleapis/storage-testbench@6f9cf7a8c9d41269bbf8c423cf9b68ec8bf8bc06", # v0.62.0 No official pip package yet
+    "fakesnow[server]==0.11.11",
+    "googleapis-storage-testbench @ git+https://github.com/googleapis/storage-testbench@dffecd261771a124766e02f8a3410bdc5ace0401", # v0.63.0 No official pip package yet
     # Docs
     "mkdocs==1.6.1",
     "mkdocs-material==9.7.6",

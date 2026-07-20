@@ -22,23 +22,26 @@ logger = logging.getLogger("Container Tools")
 
 
 class Datastore(BaseModule):
-    """Handles all Google Cloud Datastore operations.
+    """Handles Google Cloud Datastore operations for task entries.
 
-    This class provides methods for interacting with Google Cloud Datastore,
-    including querying, creating, and updating task entries.
+    This class provides methods for querying, creating, and updating task entries
+    in Google Cloud Datastore. The Datastore client is created internally and
+    exposed as `client` for direct use when needed.
+
+    Requires the `datastore` extra: `dataeng-container-tools[datastore]`.
 
     Attributes:
         current_task_kind: The kind of task entries this instance will handle.
-        client: The Datastore client instance.
+        client: The underlying `google.cloud.datastore.Client` instance.
 
     Examples:
-        ds = DataStore("task_kind", ds_secret_location="/path/to/credentials.json")
-        client = ds.client
-        ds.handle_task(client, {
-            "dag_id": "my_dag",
-            "run_id": "run_123",
-            "airflow_task_id": "my_task"
-        })
+        >>> ds = Datastore("MyTask", gcp_secret_location="/path/to/credentials.json")
+        >>> ds.handle_task({
+        ...     "dag_id": "my_dag",
+        ...     "run_id": "run_123",
+        ...     "airflow_task_id": "my_task",
+        ... })
+        >>> entries = ds.get_task_entry({"dag_id": "my_dag"}, kind="MyTask")
     """
 
     MODULE_NAME: ClassVar[str] = "DS"

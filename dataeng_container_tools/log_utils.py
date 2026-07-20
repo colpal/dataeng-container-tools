@@ -23,7 +23,14 @@ root_logger = logging.getLogger(None)
 
 
 def log_memory_usage(pid: int = os.getpid()) -> None:
-    """Log the current memory usage of the process and subprocesses."""
+    """Log the RSS/VMS memory usage of a process and its child processes.
+
+    Emits a per process breakdown and a combined total via the root logger.
+    Failures (e.g. the process no longer exists) are logged rather than raised.
+
+    Args:
+        pid: Process ID to inspect. Defaults to the current process.
+    """
     try:
         process = psutil.Process(pid)
         main_memory_usage = process.memory_info()
@@ -69,7 +76,20 @@ def configure_logger(
     logger_name: str,
     id_type: Literal["process", "thread", "none"] = "none",
 ) -> logging.Logger:
-    """Generate a logger with specifications."""
+    """Create a stderr logger that does not propagate to the root logger.
+
+    Any existing handlers on the named logger are cleared so repeated calls stay
+    idempotent. The log format optionally includes a process or thread id, which
+    is useful when running concurrently.
+
+    Args:
+        logger_name: Name of the logger to configure.
+        id_type: Identifier to include in each log line. "process" adds the PID,
+            "thread" adds the thread id, and "none" adds neither.
+
+    Returns:
+        The configured logger, set to INFO level.
+    """
     logger = logging.getLogger(logger_name)
 
     logger.propagate = False

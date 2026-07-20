@@ -84,8 +84,8 @@ class BaseModule(metaclass=ModuleRegistryMeta):
         API
         >>> print(BaseModule.get_default_secret_paths()) # Default for BaseModule itself
         {}
-        >>> print(API.get_default_secret_paths())
-        {"API_CONFIG": PosixPath("/vault/secrets/api-config.json")}
+        >>> print(APIClient.get_default_secret_paths())
+        {'API_CONFIG': PosixPath('/vault/secrets/api-config.json')}
     """
 
     # Class attributes to identify the module type and its default secret paths

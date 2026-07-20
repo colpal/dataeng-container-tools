@@ -10,7 +10,7 @@ name = "some-container"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "dataeng-container-tools",
 ]
@@ -22,7 +22,7 @@ dataeng-container-tools = { git = "https://github.com/colpal/dataeng-container-t
 ## Dockerfile
 
 ```dockerfile
-FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/astral/uv:0.11.23-python3.13-trixie-slim AS builder
+FROM us-east4-docker.pkg.dev/cp-artifact-registry/mirror-dockerhub/astral/uv:0.11.29-python3.14-trixie-slim AS builder
 
 WORKDIR /app
 

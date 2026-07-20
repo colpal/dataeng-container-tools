@@ -115,7 +115,7 @@ df, = gcs.download("gs://my-bucket/data1.csv").values()
 
 ## Upload {#upload-section}
 
-The syntax for uploading is similar to downloading, but now `src_to_dst` only takes in a tuple or list of tuples in the format `(source_file, destination_gcs_uri)` or `(source_object, destination_gcs_uri)`.
+The syntax for uploading is similar to downloading, but now `src_dst` only takes in a tuple or list of tuples in the format `(source_file, destination_gcs_uri)` or `(source_object, destination_gcs_uri)`.
 
 ```python
 # Say we have some_df DataFrame and ./data1.csv file
@@ -177,7 +177,7 @@ gcs = GCSFileIO()
 # Download a file from GCS to a local file (notice no return unlike with to object)
 gcs.download(("gs://my-bucket/path/to/data.csv", "./local-folder/local-file.csv"))
 
-# Upload a local file to GCS (can also choose to omit the src_to_dst keyword arg)
+# Upload a local file to GCS (can also choose to omit the src_dst keyword arg)
 gcs.upload(("./local-folder/local-file.csv", "gs://my-bucket/other-path/to/data.csv"))
 ```
 
@@ -207,7 +207,7 @@ result_df = pd.concat([parquet_df, csv_df])
 gcs.upload((result_df, "gs://my-bucket/output.parquet"))
 
 gcs.upload(
-    src_to_dst=(result_df, "gs://my-bucket/output.csv"),
+    src_dst=(result_df, "gs://my-bucket/output.csv"),
     header=True,
     index=False,
 )

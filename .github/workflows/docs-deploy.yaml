@@ -12,8 +12,8 @@ on:
       - 'v*.*.*'
 
 concurrency:
-  group: docs-deploy-${{ github.ref }}
-  cancel-in-progress: true
+  group: docs-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy-version:

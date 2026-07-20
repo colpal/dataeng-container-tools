@@ -37,7 +37,7 @@ To download locally:
 pip install git+https://github.com/colpal/dataeng-container-tools.git@v{version}
 ```
 
-[Documentation can be found here](https://dataeng-container-tools-515523808041.us-east4.run.app/dev/).
+[Documentation can be found here](https://dataeng-container-tools-515523808041.us-east4.run.app/).
 
 Old documentation for [v0 can be found here](https://github.com/colpal/dataeng-container-tools/tree/v0.6.4?tab=readme-ov-file#data-engineering-container-tools).
 

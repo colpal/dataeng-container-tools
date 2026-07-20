@@ -100,6 +100,7 @@ jobs:
       (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped') &&
       (needs.deploy-dev.result == 'success' || needs.deploy-dev.result == 'failure' || needs.deploy-dev.result == 'skipped')
     permissions:
+      contents: read
       id-token: write
     runs-on: ubuntu-latest
     steps:

@@ -3,25 +3,37 @@ name: Build and Deploy Docs
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
     tags:
       - 'v*.*.*'
 
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+
 jobs:
-  build-and-upload-docs:
+  deploy-version:
+    if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
-      id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.ref }}
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
-          version: "0.10.9"
+          version: "0.11.29"
+          enable-cache: false
 
       - name: Configure git
         run: |
@@ -31,39 +43,71 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            
-            # Check if this is a pre-release (contains alpha, beta, rc, dev, etc.)
-            if [[ "$VERSION" =~ (alpha|beta|rc|dev|pre) ]]; then
-              echo "Pre-release tag detected: $VERSION"
-              echo "version=dev" >> $GITHUB_OUTPUT
-              echo "alias=" >> $GITHUB_OUTPUT
-            else
-              echo "Stable release tag detected: $VERSION"
-              echo "version=$VERSION" >> $GITHUB_OUTPUT
-              echo "alias=latest" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "version=dev" >> $GITHUB_OUTPUT
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [[ "$VERSION" =~ (alpha|beta|rc|dev|pre) ]]; then
             echo "alias=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Deploy docs
-        run: |
-          if [[ -n "$STEPS_VERSION_OUTPUTS_ALIAS" ]]; then
-            uv run mike deploy --push --update-aliases $STEPS_VERSION_OUTPUTS_VERSION $STEPS_VERSION_OUTPUTS_ALIAS
-            uv run mike set-default --push latest
           else
-            uv run mike deploy --push $STEPS_VERSION_OUTPUTS_VERSION
+            echo "alias=latest" >> $GITHUB_OUTPUT
           fi
         env:
-          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
-          STEPS_VERSION_OUTPUTS_ALIAS: ${{ steps.version.outputs.alias }}
+          GITHUB_REF: ${{ github.ref }}
 
-      - name: Checkout gh-pages
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Deploy versioned docs
+        run: |
+          if [[ -n "$ALIAS" ]]; then
+            uv run mike deploy --push --update-aliases "$VERSION" "$ALIAS"
+            uv run mike set-default --push latest
+          else
+            uv run mike deploy --push "$VERSION"
+          fi
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ALIAS: ${{ steps.version.outputs.alias }}
+
+  deploy-dev:
+    needs: [deploy-version]
+    if: always() && !startsWith(github.ref, 'refs/tags/') && (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped')
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: main
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          version: "0.11.29"
+          enable-cache: false
+
+      - name: Configure git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Deploy dev docs
+        run: uv run mike deploy --push dev
+
+  sync-to-gcs:
+    needs: [deploy-version, deploy-dev]
+    if: |
+      always() &&
+      (needs.deploy-version.result == 'success' || needs.deploy-version.result == 'skipped') &&
+      (needs.deploy-dev.result == 'success' || needs.deploy-dev.result == 'failure' || needs.deploy-dev.result == 'skipped')
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
           ref: gh-pages
           clean: true
 

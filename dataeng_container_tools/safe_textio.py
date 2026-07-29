@@ -51,6 +51,12 @@ class SafeTextIO(TextIO):
     The list of bad words can be populated automatically from secret files or
     manually by adding specific strings.
 
+    `typing.TextIO` only exists for static type checking, so its inherited
+    members are empty stubs rather than real implementations. `__getattribute__`
+    is overridden to forward attribute lookups to the wrapped stream, so
+    `SafeTextIO` behaves like a normal stream at runtime while still
+    satisfying `TextIO` for type checkers.
+
     Attributes:
         _bad_words (ClassVar[set[str]]): A set of strings to be censored.
         _pattern_cache (ClassVar[tuple[re.Pattern, int]]): Cache for the compiled
@@ -95,9 +101,33 @@ class SafeTextIO(TextIO):
                 of words or objects convertible to strings that should be censored.
                 Defaults to an empty list.
         """
+        self.__wrapped = textio
         self.__old_textio_write = textio.write
         textio.write = self.write
         SafeTextIO.add_words(bad_words)
+
+    def __getattribute__(self, name: str) -> object:
+        """Forwards attribute lookups to the wrapped stream.
+
+        This replicates the real behavior that `typing.TextIO` only stubs out
+        for type checking, so attributes like file descriptors or encoding
+        come from the wrapped stream instead of an empty default.
+
+        Args:
+            name: The attribute name being looked up.
+
+        Returns:
+            The attribute from the wrapped stream when it defines one,
+            otherwise the result of normal lookup.
+        """
+        if name == "write" or (name.startswith("__") and name.endswith("__")):
+            return object.__getattribute__(self, name)
+
+        wrapped = object.__getattribute__(self, "_SafeTextIO__wrapped")
+        if hasattr(wrapped, name):
+            return getattr(wrapped, name)
+
+        return object.__getattribute__(self, name)
 
     def write(self, message: str | SupportsStr, /) -> int:
         """Writes the given message to the wrapped TextIO stream, censoring secrets.

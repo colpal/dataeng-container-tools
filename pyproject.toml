@@ -59,7 +59,7 @@ dev = [
     "googleapis-storage-testbench @ git+https://github.com/googleapis/storage-testbench@dffecd261771a124766e02f8a3410bdc5ace0401", # v0.63.0 No official pip package yet
     # Docs
     "mkdocs==1.6.1",
-    "mkdocs-material==9.7.6",
+    "mkdocs-material==9.7.7",
     "mkdocstrings[python]==1.0.3",
     "mkdocs-gen-files==0.6.0",
     "mkdocs-literate-nav==0.6.2",

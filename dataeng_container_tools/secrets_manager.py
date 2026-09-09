@@ -192,9 +192,14 @@ class SecretLocations(dict[str, str]):
             SF (str): Default location for Snowflake secret.
             DS (str): Default location for Datastore secret.
         """
+        if getattr(self, "_initialized", False):
+            return
+
         self.GCS: str = ""
         self.SF: str = ""
         self.DS: str = ""
+
+        self._initialized = True
 
     def update(self, new_secret_locations: dict[str, str], *, set_attr: bool = False) -> None:  # type: ignore  # noqa: PGH003
         """Updates the secret locations with new values and optionally sets them as attributes.
